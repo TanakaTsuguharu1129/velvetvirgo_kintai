@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>勤務管理システム - 管理画面</title>
+  <style>
+    :root {
+      --bg-color: #f4f7f6;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --primary-color: #4a90e2;
+      --primary-hover: #357abd;
+      --danger-color: #e056fd;
+      --danger-hover: #be2edd;
+      --border-color: #e0e0e0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      padding: 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--primary-color);
+    }
+    h1 { font-size: 24px; color: var(--primary-color); }
+    .nav-buttons { display: flex; gap: 10px; }
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.2s;
+    }
+    .btn-primary { background-color: var(--primary-color); color: white; }
+    .btn-primary:hover { background-color: var(--primary-hover); }
+    .btn-danger { background-color: var(--danger-color); color: white; }
+    .btn-danger:hover { background-color: var(--danger-hover); }
+    .btn-secondary { background-color: #6c757d; color: white; }
+    .btn-secondary:hover { background-color: #5a6268; }
+    
+    .card {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+    }
+    .search-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: flex-end;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .form-group label { font-size: 14px; font-weight: bold; }
+    input, select {
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .table-wrapper { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      text-align: left;
+    }
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 14px;
+    }
+    th { background-color: #f8f9fa; font-weight: bold; }
+    tr:hover { background-color: #f1f3f5; }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: white;
+      padding: 25px;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    .modal-content h2 { margin-bottom: 15px; font-size: 20px; }
+    .modal-content .form-group { margin-bottom: 15px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+    
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+      color: #666;
+    }
+    .spinner {
+      border: 4px solid rgba(0,0,0,0.1);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border-left-color: var(--primary-color);
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .sum-card {
+      background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    .sum-card.green { background: linear-gradient(135deg, #00b894, #55efc4); }
+    .sum-card-title { font-size: 12px; opacity: 0.9; }
+    .sum-card-value { font-size: 24px; font-weight: bold; margin-top: 5px; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>勤務管理システム - 管理画面</h1>
+      <div class="nav-buttons">
+        <button class="btn-primary" onclick="switchView('list')">打刻一覧</button>
+        <button class="btn-primary" onclick="switchView('calc')">給与計算</button>
+        <button class="btn-danger" onclick="openAddModal()">手動データ追加</button>
+      </div>
+    </header>
+
+    <!-- メインローディング表示 -->
+    <div id="mainLoading" class="loading" style="display: none;">
+      <div class="spinner"></div>
+      <div>データを取得中...</div>
+    </div>
+
+    <!-- 1. 打刻一覧画面 -->
+    <div id="listView" class="view-section">
+      <div class="card">
+        <div class="search-box">
+          <div class="form-group">
+            <label for="filterName">名前</label>
+            <input type="text" id="filterName" placeholder="名前で検索" oninput="applyFilters()">
+          </div>
+          <div class="form-group">
+            <label for="filterType">勤務区分</label>
+            <select id="filterType" onchange="applyFilters()">
+              <option value="">すべて</option>
+              <option value="昼勤出勤">昼勤出勤</option>
+              <option value="昼勤退勤">昼勤退勤</option>
+              <option value="夜勤出勤">夜勤出勤</option>
+              <option value="夜勤退勤">夜勤退勤</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="filterDate">日付</label>
+            <input type="date" id="filterDate" onchange="applyFilters()">
+          </div>
+          <button class="btn-secondary" onclick="resetFilters()">クリア</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>名前</th>
+                <th>区分</th>
+                <th>勤務日</th>
+                <th>予定日時</th>
+                <th>打刻日時</th>
+                <th>累計時間</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="logTableBody">
+              <!-- JSで動的生成 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 給与計算画面 -->
+    <div id="calcView" class="view-section" style="display: none;">
+      <div class="card">
+        <div class="search-box">
+          <div class="form-group">
+            <label for="calcMonth">対象年月</label>
+            <input type="month" id="calcMonth" onchange="loadSalaryCalc()">
+          </div>
+          <div class="form-group">
+            <label for="hourlyWage">基本時給 (円)</label>
+            <input type="number" id="hourlyWage" value="1200" onchange="renderSalaryTable()">
+          </div>
+          <div class="form-group">
+            <label for="nightWage">夜勤時給 (円)</label>
+            <input type="number" id="nightWage" value="1500" onchange="renderSalaryTable()">
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-cards">
+        <div class="sum-card">
+          <div class="sum-card-title">総稼働時間</div>
+          <div class="sum-card-value" id="totalHours">0.0h</div>
+        </div>
+        <div class="sum-card green">
+          <div class="sum-card-title">概算支給総額</div>
+          <div class="sum-card-value" id="totalSalary">¥0</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>スタッフ別集計一覧</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>スタッフ名</th>
+                <th>昼勤合計時間</th>
+                <th>夜勤合計時間</th>
+                <th>総稼働時間</th>
+                <th>概算給与</th>
+              </tr>
+            </thead>
+            <tbody id="salaryTableBody">
+              <!-- JSで動的生成 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 編集・追加共通モーダル -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <h2 id="modalTitle">データ編集</h2>
+      <input type="hidden" id="editId">
+      
+      <div class="form-group">
+        <label for="editName">名前</label>
+        <input type="text" id="editName">
+      </div>
+      <div class="form-group">
+        <label for="editType">勤務区分</label>
+        <select id="editType">
+          <option value="昼勤出勤">昼勤出勤</option>
+          <option value="昼勤退勤">昼勤退勤</option>
+          <option value="夜勤出勤">夜勤出勤</option>
+          <option value="夜勤退勤">夜勤退勤</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="editWorkDate">勤務日 (YYYY-MM-DD)</label>
+        <input type="date" id="editWorkDate">
+      </div>
+      <div class="form-group">
+        <label for="editSchedTime">予定日時</label>
+        <input type="datetime-local" id="editSchedTime">
+      </div>
+      <div class="form-group">
+        <label for="editPunchTime">打刻日時</label>
+        <input type="datetime-local" id="editPunchTime">
+      </div>
+      <div class="form-group">
+        <label for="editTotalHours">累計時間情報 (例: 150h 30m)</label>
+        <input type="text" id="editTotalHours" placeholder="空欄でも可">
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal()">キャンセル</button>
+        <button class="btn-primary" onclick="saveData()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GASとの連携スクリプト -->
+  <script>
+    // デプロイしたGASのWebアプリURLをここに貼り付けてください
+    const WEB_APP_URL = "YOUR_GAS_WEB_APP_URL_HERE"; 
+
+    let rawData = [];
+    let isEditMode = false;
+
+    // パディングヘルパー
+    const pad = n => String(n).padStart(2, '0');
+
+    // --- iPad(Safari)のNaNバグ対策：安全に日時をパースするヘルパー関数 ---
+    const safeNewDate = (val) => {
+      if (!val) return new Date(NaN);
+      if (val instanceof Date) return val;
+      
+      if (typeof val === 'string') {
+        let str = val.trim();
+        // iPad対策：「2026-05-22 19:00:00」形式のスペースを「T」に置換
+        if (str.includes('-') && str.includes(' ') && !str.includes('T')) {
+          str = str.replace(' ', 'T');
+        }
+        const d = new Date(str);
+        // 無効な日付（NaN）ならハイフンをスラッシュに置換して再トライ
+        if (isNaN(d.getTime())) {
+          return new Date(str.replace(/-/g, '/'));
+        }
+        return d;
+      }
+      return new Date(val);
+    };
+
+    // 日時フォーマット関数 (YYYY-MM-DD HH:mm)
+    const fmtDT = d => {
+      const dt = safeNewDate(d);
+      if (isNaN(dt.getTime())) return '—'; 
+      return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+    };
+
+    // 日付フォーマット関数 (YYYY-MM-DD)
+    const fmtDate = d => {
+      const dt = safeNewDate(d);
+      if (isNaN(dt.getTime())) return '—';
+      return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`;
+    };
+
+    // datetime-localインプット用フォーマット変換
+    const isoToLocal = iso => {
+      const d = safeNewDate(iso);
+      if (isNaN(d.getTime())) return '';
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+
+    // アプリ起動時の処理
+    window.addEventListener('DOMContentLoaded', () => {
+      // 基準月として当月を設定
+      const now = new Date();
+      document.getElementById('calcMonth').value = `${now.getFullYear()}-${pad(now.getMonth()+1)}`;
+      loadAllData();
+    });
+
+    // 画面切り替え
+    function switchView(view) {
+      document.querySelectorAll('.view-section').forEach(el => el.style.display = 'none');
+      if (view === 'list') {
+        document.getElementById('listView').style.display = 'block';
+      } else if (view === 'calc') {
+        document.getElementById('calcView').style.display = 'block';
+        loadSalaryCalc();
+      }
+    }
+
+    // 全データロード（JSONP擬似、またはfetchによる読み込み）
+    function loadAllData() {
+      document.getElementById('mainLoading').style.display = 'block';
+      
+      // GASの仕様に合わせた固定グローバル関数経由または通常のFetch
+      // ここでは通常のFetch(CORS)またはGASのWebAppsへのリクエストを想定
+      fetch(`${WEB_APP_URL}?action=getLogs`)
+        .then(res => res.json())
+        .then(data => {
+          rawData = data;
+          renderLogTable(rawData);
+        })
+        .catch(err => {
+          console.error("データ取得エラー:", err);
+          alert("データの取得に失敗しました。URLを確認するか、しばらく経ってから再度お試しください。");
+        })
+        .finally(() => {
+          document.getElementById('mainLoading').style.display = 'none';
+        });
+    }
+
+    // 打刻一覧の描画
+    function renderLogTable(data) {
+      const tbody = document.getElementById('logTableBody');
+      tbody.innerHTML = '';
+
+      if(data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">該当データがありません</td></tr>';
+        return;
+      }
+
+      data.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.id || '—'}</td>
+          <td><strong>${r.name || '—'}</strong></td>
+          <td>${r.type || '—'}</td>
+          <td>${r.workDate ? fmtDate(r.workDate) : '—'}</td>
+          <td>${r.schedTime ? fmtDT(r.schedTime) : '—'}</td>
+          <td>${r.punchTime ? fmtDT(r.punchTime) : '—'}</td>
+          <td>${r.totalHours || '—'}</td>
+          <td>
+            <button class="btn-primary" style="padding:4px 8px; font-size:12px;" onclick="openEditModal('${r.id}')">編集</button>
+            <button class="btn-danger" style="padding:4px 8px; font-size:12px; background-color:#ff7675;" onclick="deleteLog('${r.id}')">削除</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // フィルター適用
+    function applyFilters() {
+      const nameVal = document.getElementById('filterName').value.toLowerCase();
+      const typeVal = document.getElementById('filterType').value;
+      const dateVal = document.getElementById('filterDate').value;
+
+      const filtered = rawData.filter(r => {
+        const matchName = !nameVal || (r.name && r.name.toLowerCase().includes(nameVal));
+        const matchType = !typeVal || r.type === typeVal;
+        
+        let matchDate = true;
+        if (dateVal) {
+          matchDate = r.workDate && fmtDate(r.workDate) === dateVal;
+        }
+
+        return matchName && matchType && matchDate;
+      });
+
+      renderLogTable(filtered);
+    }
+
+    function resetFilters() {
+      document.getElementById('filterName').value = '';
+      document.getElementById('filterType').value = '';
+      document.getElementById('filterDate').value = '';
+      renderLogTable(rawData);
+    }
+
+    // モーダル制御
+    function openAddModal() {
+      isEditMode = false;
+      document.getElementById('modalTitle').textContent = "手動データ追加";
+      document.getElementById('editId').value = '';
+      document.getElementById('editName').value = '';
+      document.getElementById('editType').value = '昼勤出勤';
+      document.getElementById('editWorkDate').value = fmtDate(new Date());
+      document.getElementById('editSchedTime').value = '';
+      document.getElementById('editPunchTime').value = '';
+      document.getElementById('editTotalHours').value = '';
+      document.getElementById('editModal').style.display = 'flex';
+    }
+
+    function openEditModal(id) {
+      isEditMode = true;
+      document.getElementById('modalTitle').textContent = "データ編集";
+      const item = rawData.find(r => String(r.id) === String(id));
+      if(!item) return alert("データが見つかりません");
+
+      document.getElementById('editId').value = item.id;
+      document.getElementById('editName').value = item.name || '';
+      document.getElementById('editType').value = item.type || '昼勤出勤';
+      document.getElementById('editWorkDate').value = item.workDate ? fmtDate(item.workDate) : '';
+      document.getElementById('editSchedTime').value = item.schedTime ? isoToLocal(item.schedTime) : '';
+      document.getElementById('editPunchTime').value = item.punchTime ? isoToLocal(item.punchTime) : '';
+      document.getElementById('editTotalHours').value = item.totalHours || '';
+      
+      document.getElementById('editModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('editModal').style.display = 'none';
+    }
+
+    // 追加・編集の保存処理
+    function saveData() {
+      const id = document.getElementById('editId').value;
+      const payload = {
+        action: isEditMode ? 'updateLog' : 'addLog',
+        id: id,
+        name: document.getElementById('editName').value,
+        type: document.getElementById('editType').value,
+        workDate: document.getElementById('editWorkDate').value,
+        schedTime: document.getElementById('editSchedTime').value ? fmtDT(document.getElementById('editSchedTime').value) : '',
+        punchTime: document.getElementById('editPunchTime').value ? fmtDT(document.getElementById('editPunchTime').value) : '',
+        totalHours: document.getElementById('editTotalHours').value
+      };
+
+      if(!payload.name || !payload.workDate) {
+        return alert("名前と勤務日は必須項目です。");
+      }
+
+      document.getElementById('mainLoading').style.display = 'block';
+      closeModal();
+
+      fetch(WEB_APP_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(res => {
+        if(res.success) {
+          alert("保存が完了しました。");
+          loadAllData();
+        } else {
+          alert("保存エラー: " + res.message);
+        }
+      })
+      .catch(err => alert("通信エラーが発生しました。"))
+      .finally(() => document.getElementById('mainLoading').style.display = 'none');
+    }
+
+    // 削除処理
+    function deleteLog(id) {
+      if(!confirm("本当にこのデータを削除しますか？")) return;
+      document.getElementById('mainLoading').style.display = 'block';
+
+      fetch(WEB_APP_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'deleteLog', id: id })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if(res.success) {
+          alert("削除しました。");
+          loadAllData();
+        } else {
+          alert("削除失敗: " + res.message);
+        }
+      })
+      .catch(err => alert("通信エラー"))
+      .finally(() => document.getElementById('mainLoading').style.display = 'none');
+    }
+
+
+    // ==========================================
+    // 給与集計・ロジック集計セクション
+    // ==========================================
+    let salarySummaryData = {};
+
+    function loadSalaryCalc() {
+      const targetMonth = document.getElementById('calcMonth').value; // YYYY-MM
+      if(!targetMonth) return;
+
+      // 名前のリストをユニーク化して、指定月内のデータを集計する
+      salarySummaryData = {};
+
+      rawData.forEach(r => {
+        if(!r.workDate || !r.name) return;
+        const wDateStr = fmtDate(r.workDate); // YYYY-MM-DD
+        if(!wDateStr.startsWith(targetMonth)) return;
+
+        if(!salarySummaryData[r.name]) {
+          salarySummaryData[r.name] = { dayMinutes: 0, nightMinutes: 0 };
+        }
+
+        // 列ズレ等によりtotalHoursが存在しない、または不完全な行のガード
+        if(!r.totalHours || typeof r.totalHours !== 'string') return;
+
+        // 累計文字列 "1953h 15m" などから実数値をパース
+        const hMatch = r.totalHours.match(/(\d+)h/);
+        const mMatch = r.totalHours.match(/(\d+)m/);
+        
+        const hours = hMatch ? parseInt(hMatch[1], 10) : 0;
+        const mins = mMatch ? parseInt(mMatch[1], 10) : 0;
+        const totalMinutes = (hours * 60) + mins;
+
+        // 勤務区分に応じて昼勤・夜勤に按分
+        if(r.type.includes('夜勤')) {
+          salarySummaryData[r.name].nightMinutes += totalMinutes;
+        } else {
+          salarySummaryData[r.name].dayMinutes += totalMinutes;
+        }
+      });
+
+      renderSalaryTable();
+    }
+
+    function renderSalaryTable() {
+      const tbody = document.getElementById('salaryTableBody');
+      tbody.innerHTML = '';
+
+      const hWage = parseFloat(document.getElementById('hourlyWage').value) || 0;
+      const nWage = parseFloat(document.getElementById('nightWage').value) || 0;
+
+      let totalAllMinutes = 0;
+      let totalAllSalary = 0;
+
+      const keys = Object.keys(salarySummaryData);
+      if(keys.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">指定月に対象データがありません</td></tr>';
+        document.getElementById('totalHours').textContent = "0.0h";
+        document.getElementById('totalSalary').textContent = "¥0";
+        return;
+      }
+
+      keys.forEach(name => {
+        const data = salarySummaryData[name];
+        
+        const dayH = data.dayMinutes / 60;
+        const nightH = data.nightMinutes / 60;
+        const sumH = dayH + nightH;
+
+        // 給与算出 (分単位で計算して端数を丸める)
+        const daySalary = Math.round((data.dayMinutes / 60) * hWage);
+        const nightSalary = Math.round((data.nightMinutes / 60) * nWage);
+        const totalSalary = daySalary + nightSalary;
+
+        totalAllMinutes += (data.dayMinutes + data.nightMinutes);
+        totalAllSalary += totalSalary;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${name}</strong></td>
+          <td>${dayH.toFixed(2)} h</td>
+          <td>${nightH.toFixed(2)} h</td>
+          <td><strong>${sumH.toFixed(2)} h</strong></td>
+          <td>¥ ${totalSalary.toLocaleString()}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // ダッシュボード上部のサマリーカードを更新
+      document.getElementById('totalHours').textContent = `${(totalAllMinutes / 60).toFixed(1)}h`;
+      document.getElementById('totalSalary').textContent = `¥${totalAllSalary.toLocaleString()}`;
+    }
+
+  </script>
+</body>
+</html>
