@@ -71,6 +71,7 @@
 
     .tbl-wrap{overflow-x:auto;border-radius:10px;}
     table{width:100%;border-collapse:collapse;font-size:.8rem;}
+    .pay-summary-row:hover{background:rgba(255,255,255,.03);}
     thead tr{background:var(--surface2);}
     th{padding:10px 12px;text-align:left;color:var(--muted);font-weight:500;letter-spacing:.06em;font-size:.7rem;text-transform:uppercase;white-space:nowrap;}
     td{padding:9px 12px;border-top:1px solid var(--border);white-space:nowrap;}
@@ -105,6 +106,7 @@
     .emp-del-btn{background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:.75rem;padding:5px 10px;cursor:pointer;transition:all .2s;white-space:nowrap;}
     .emp-del-btn:hover{border-color:var(--red);color:var(--red);}
     .auto-hint{font-size:.6rem;color:var(--accent2);text-align:right;margin-top:2px;min-height:12px;}
+    
     /* Modal */
     .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease;}
     .modal-overlay.hidden{display:none;}
@@ -177,7 +179,6 @@
     <button class="tab-btn"        onclick="switchTab('payroll')">③ 給与計算</button>
   </div>
 
-  <!-- ═══ TAB 1: 勤怠履歴 ═══ -->
   <div class="tab-panel active" id="tab-attendance">
     <div class="sec-label">GSS 接続設定</div>
     <div class="card">
@@ -247,7 +248,6 @@
     </div>
   </div>
 
-  <!-- ═══ TAB 2: 従業員マスター ═══ -->
   <div class="tab-panel" id="tab-employees">
     <div class="sec-label">GSS 従業員マスター</div>
     <div class="card">
@@ -258,7 +258,6 @@
         <span id="emp-save-status" style="font-size:.75rem;color:var(--muted);"></span>
       </div>
 
-      <!-- ヘッダー -->
       <div style="display:grid;grid-template-columns:1fr 110px 110px 110px 110px auto;gap:8px;padding:0 14px 8px;font-size:.64rem;color:var(--muted);letter-spacing:.06em;">
         <div>氏名</div>
         <div style="text-align:center;">基本時給<br>（円）</div>
@@ -274,10 +273,7 @@
     </div>
   </div>
 
-  <!-- ═══ TAB 3: 給与計算 ═══ -->
   <div class="tab-panel" id="tab-payroll">
-    <div class="sec-label">計算期間</div>
-    <!-- STEP A: 計算期間 & データ取得 -->
     <div class="sec-label">STEP 1 ／ 計算期間とデータ取得</div>
     <div class="card">
       <div class="date-range" style="margin-bottom:14px;">
@@ -288,15 +284,12 @@
         <button class="btn btn-outline" onclick="setLastMonth('pay-from','pay-to')">先月</button>
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-        <button class="btn btn-primary" id="btn-pay-fetch" onclick="fetchPayrollData()">
-          GSSからデータ取得
-        </button>
+        <button class="btn btn-primary" id="btn-pay-fetch" onclick="fetchPayrollData()">GSSからデータ取得</button>
         <div class="progress-wrap" style="flex:1;min-width:80px;display:none;" id="pay-fetch-prog-wrap">
           <div class="progress-fill" id="pay-fetch-prog" style="width:0%"></div>
         </div>
         <span id="pay-fetch-status" style="font-size:.75rem;color:var(--muted);"></span>
       </div>
-      <!-- 取得結果プレビュー -->
       <div id="pay-data-preview" style="display:none;margin-top:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;">
         <div style="font-size:.72rem;color:var(--muted);margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase;">取得データ確認</div>
         <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:.82rem;">
@@ -309,7 +302,6 @@
       </div>
     </div>
 
-    <!-- STEP B: 交通費設定 -->
     <div class="sec-label">STEP 2 ／ 交通費設定</div>
     <div class="card">
       <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
@@ -324,7 +316,6 @@
       </div>
     </div>
 
-    <!-- STEP C: 計算実行 -->
     <div class="sec-label">STEP 3 ／ 計算実行</div>
     <div class="card">
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
@@ -343,56 +334,59 @@
         </div>
         <div class="tbl-wrap">
           <table>
-            <thead><tr>
-              <th>従業員</th><th>基本時給</th><th>出勤日数</th>
-              <th>総勤務時間</th><th>通常時間</th><th>深夜時間</th><th>土日祝時間</th><th>土日祝深夜</th>
-              <th>基本賃金</th><th>深夜割増</th><th>土日祝割増</th><th>土日祝深夜割増</th>
-              <th>給与小計</th><th>交通費</th><th style="color:var(--gold);">合計支給</th>
-            </tr></thead>
-            <tbody id="payroll-body"></tbody>
+            <thead>
+              <tr>
+                <th>従業員名</th><th>出勤日数</th><th>総労働</th>
+                <th>通常時間</th><th>深夜時間</th><th>土日祝時間</th><th>土日祝深夜</th>
+                <th>基本給</th><th>深夜手当</th><th>土日祝手当</th><th>土日祝深夜手当</th>
+                <th>給与小計</th><th>交通費</th><th>支給総額</th>
+              </tr>
+            </thead>
+            <tbody id="pay-body"></tbody>
           </table>
         </div>
       </div>
     </div>
   </div>
-</div><!-- /#app -->
+</div>
 
-<!-- 打刻編集モーダル -->
 <div class="modal-overlay hidden" id="att-modal" onclick="closeAttModal(event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-title" id="att-modal-title">打刻レコードを編集</div>
+  <div class="modal">
+    <div class="modal-title" id="att-modal-title">✏️ 打刻レコードを編集</div>
     <input type="hidden" id="modal-rec-id" />
     <div class="form-group">
-      <label class="form-label">従業員名</label>
+      <label class="form-label">従業員名 *</label>
       <select class="form-select" id="modal-emp-sel"></select>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">勤務種別</label>
+        <label class="form-label">勤務種別 *</label>
         <select class="form-select" id="modal-shift">
-          <option value="昼勤">昼勤</option><option value="夜勤">夜勤</option>
+          <option value="昼勤">昼勤</option>
+          <option value="夜勤">夜勤</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">打刻種別</label>
+        <label class="form-label">打刻種別 *</label>
         <select class="form-select" id="modal-punch">
-          <option value="出勤">出勤</option><option value="退勤">退勤</option>
+          <option value="出勤">出勤</option>
+          <option value="退勤">退勤</option>
         </select>
       </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">打刻日時</label>
-      <input type="datetime-local" class="form-input" id="modal-ptime" />
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">日付</label>
+        <label class="form-label">実際の日付 (YYYY-MM-DD) *</label>
         <input type="date" class="form-input" id="modal-date" />
       </div>
       <div class="form-group">
-        <label class="form-label">勤務時間（分）</label>
-        <input type="number" class="form-input" id="modal-dur" min="0" placeholder="例: 480" />
+        <label class="form-label">勤務時間修正 (分)</label>
+        <input type="number" class="form-input" id="modal-dur" placeholder="空欄なら自動計算" min="0" />
       </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">打刻日時 (丸め前ローカル) *</label>
+      <input type="datetime-local" class="form-input" id="modal-ptime" step="1" />
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeAttModal()">キャンセル</button>
@@ -401,34 +395,20 @@
   </div>
 </div>
 
-<!-- 従業員追加モーダル -->
 <div class="modal-overlay hidden" id="emp-modal" onclick="closeEmpModal(event)">
-  <div class="modal" onclick="event.stopPropagation()" style="max-width:520px;">
-    <div class="modal-title">＋ 従業員を追加</div>
+  <div class="modal">
+    <div class="modal-title">＋ 従業員マスター 新規登録</div>
     <div class="form-group">
-      <label class="form-label">従業員名</label>
-      <input type="text" class="form-input" id="new-emp-name" maxlength="30" placeholder="例: 山田 太郎" />
+      <label class="form-label">従業員氏名 *</label>
+      <input type="text" class="form-input" id="new-emp-name" placeholder="例：山田 太郎" />
     </div>
-    <div class="form-group">
-      <label class="form-label">基本時給（円）</label>
-      <input type="number" class="form-input" id="new-emp-wage" min="0" step="10" placeholder="例: 1200"
-             oninput="onModalWageInput(this.value)" />
-      <div style="font-size:.72rem;color:var(--muted);margin-top:5px;">
-        ※ 時給を入力すると手当額を自動計算してプレビューします（上書き可能）
-      </div>
-    </div>
-
-    <!-- 自動計算プレビューバー -->
-    <div id="modal-auto-preview" style="display:none;background:rgba(78,204,163,.06);border:1px solid rgba(78,204,163,.2);border-radius:9px;padding:10px 14px;margin-bottom:16px;font-size:.75rem;color:var(--accent2);">
-      <span style="margin-right:6px;">⚡ 自動計算（大阪市法定基準）:</span>
-      <span id="prev-night"></span>　
-      <span id="prev-holiday"></span>　
-      <span id="prev-hnight"></span>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+    <div class="form-row">
       <div class="form-group">
-        <label class="form-label">深夜手当（円/時）<br><span style="font-weight:400;font-size:.68rem;">22時〜翌5時 +25%</span></label>
+        <label class="form-label">基本時給（円） *</label>
+        <input type="number" class="form-input" id="new-emp-wage" min="0" step="1" placeholder="1000" oninput="autoCalcModalAllowances(this.value)" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">深夜時給（円/時）<br><span style="font-weight:400;font-size:.68rem;">平日夜 +25%</span></label>
         <input type="number" class="form-input" id="new-emp-night" min="0" step="1" placeholder="自動入力" />
       </div>
       <div class="form-group">
@@ -447,18 +427,17 @@
   </div>
 </div>
 
-<!-- 削除確認ダイアログ -->
 <div class="confirm-overlay hidden" id="confirm-overlay">
   <div class="confirm-box">
     <div class="confirm-title" id="confirm-title">削除の確認</div>
-    <div class="confirm-body"  id="confirm-body"></div>
+    <div class="confirm-body" id="confirm-body"></div>
     <label class="confirm-csv-check">
       <input type="checkbox" id="confirm-csv-chk" checked />
       <span>📄 削除前にCSVをダウンロードする</span>
     </label>
     <div class="confirm-footer">
       <button class="btn btn-outline" onclick="closeConfirm()">キャンセル</button>
-      <button class="btn btn-danger"  id="confirm-ok">削除を実行</button>
+      <button class="btn btn-danger" id="confirm-ok">削除を実行</button>
     </div>
   </div>
 </div>
@@ -467,8 +446,9 @@
 
 <script>
 'use strict';
+
 // ══════════════════════════════════════════════
-//  IndexedDB (v3 共有)
+// IndexedDB
 // ══════════════════════════════════════════════
 let db = null;
 function initDB() {
@@ -487,785 +467,768 @@ function initDB() {
       }
     };
     req.onsuccess = e => { db = e.target.result; res(); };
-    req.onerror   = e => rej(e.target.error);
+    req.onerror = e => rej(e.target.error);
   });
 }
-const idbReq        = req => new Promise((res,rej) => { req.onsuccess=()=>res(req.result); req.onerror=()=>rej(req.error); });
-const getAllRecords  = ()  => idbReq(db.transaction('records','readonly').objectStore('records').getAll());
-const getAllEmpsRaw  = ()  => idbReq(db.transaction('employees','readonly').objectStore('employees').getAll());
-const putEmp        = emp => idbReq(db.transaction('employees','readwrite').objectStore('employees').put(emp));
-const delEmpById    = id  => idbReq(db.transaction('employees','readwrite').objectStore('employees').delete(id));
-const clearEmps     = ()  => idbReq(db.transaction('employees','readwrite').objectStore('employees').clear());
-function upsertRecord(r) {
-  return new Promise((res,rej) => {
-    const store = db.transaction('records','readwrite').objectStore('records');
-    const gr = store.get(r.id);
-    gr.onsuccess = () => { const op = gr.result ? store.put(r) : store.add(r); op.onsuccess=()=>res(); op.onerror=()=>rej(op.error); };
-    gr.onerror = () => rej(gr.error);
-  });
-}
+const idbReq = req => new Promise((res,rej) => { req.onsuccess=()=>res(req.result); req.onerror=()=>rej(req.error); });
+const getAllRecords = () => idbReq(db.transaction('records','readonly').objectStore('records').getAll());
+const getAllEmpsRaw = () => idbReq(db.transaction('employees','readonly').objectStore('employees').getAll());
+const putEmp = emp => idbReq(db.transaction('employees','summaryRow'?'readwrite':'readwrite').objectStore('employees').put(emp));
+const delEmp = id => idbReq(db.transaction('employees','readwrite').objectStore('employees').delete(id));
+const upsertRecord = rec => idbReq(db.transaction('records','readwrite').objectStore('records').put(rec));
 const delRecById = id => idbReq(db.transaction('records','readwrite').objectStore('records').delete(id));
+const clearDB = () => Promise.all([
+  idbReq(db.transaction('records','readwrite').objectStore('records').clear()),
+  idbReq(db.transaction('employees','readwrite').objectStore('employees').clear())
+]);
 
 // ══════════════════════════════════════════════
-//  State
+// グローバル管理変数
 // ══════════════════════════════════════════════
-let gasUrl          = '';
-let fetchedRecords  = [];
-let pendingChanges  = [];
-let masterEmployees = [];  // [{ id, name, wage, nightRate }]
-let empPendingChanges = []; // { action:'upsert'|'delete', emp }
-let payrollResults  = [];
-let holidayCache    = {};  // { 'YYYY': Set<'YYYY-MM-DD'> } 年ごとに祝日をキャッシュ
-// 給与計算専用データ（GSSから直接取得・fetchedRecordsと完全に分離）
-let payRecords      = [];  // 給与計算用打刻レコード
-let payEmpMap       = {};  // 給与計算用従業員マスター { name: {wage,...} }
+let gasUrl = localStorage.getItem('gasUrl') || '';
+let fetchedRecords = [];  // TAB 1 用
+let pendingChanges = [];  // TAB 1 用
+let masterEmployees = []; // TAB 2 用
+let empPendingChanges = []; // TAB 2 用
+
+// TAB 3 (給与計算用) 
+let payRecords = [];
+let payEmpMap = {};
+const holidayCache = {}; 
+let payrollResults = []; 
 
 // ══════════════════════════════════════════════
-//  Utilities
+// ユーティリティ
 // ══════════════════════════════════════════════
-const pad    = n => String(n).padStart(2,'0');
-const fmtDT  = d => { const dt=new Date(d); return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())} ${pad(dt.getHours())}:${pad(dt.getMinutes())}`; };
-const fmtMin = m => { if(m==null)return'—'; const h=Math.floor(m/60),mn=m%60; return `${h>0?h+'h ':''}${mn}m`; };
-const isoToLocal = iso => { const d=new Date(iso); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; };
-
-function setThisMonth(f,t) { const n=new Date(),y=n.getFullYear(),m=pad(n.getMonth()+1),l=new Date(y,n.getMonth()+1,0).getDate(); document.getElementById(f).value=`${y}-${m}-01`; document.getElementById(t).value=`${y}-${m}-${l}`; }
-function setLastMonth(f,t) { const n=new Date(),d=new Date(n.getFullYear(),n.getMonth()-1,1),y=d.getFullYear(),m=pad(d.getMonth()+1),l=new Date(y,d.getMonth()+1,0).getDate(); document.getElementById(f).value=`${y}-${m}-01`; document.getElementById(t).value=`${y}-${m}-${l}`; }
-
+const pad = n => String(n).padStart(2,'0');
+const fmtDT = d => {
+  if(!d || d === 'null' || d === '') return '—';
+  const normalized = String(d).replace(' ', 'T');
+  const dt = new Date(normalized);
+  if (isNaN(dt.getTime())) return String(d).substring(0, 16);
+  return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())} ${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`;
+};
+// 日時文字列から "HH:mm" だけを安全に抜き出すヘルパー（不正な値は '—' を返す）
+const fmtTimeOnly = d => {
+  if (!d || d === 'null' || d === '') return '—';
+  const normalized = String(d).replace(' ', 'T');
+  const dt = new Date(normalized);
+  if (isNaN(dt.getTime())) return '—';
+  return `${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+};
+const fmtMin = m => {
+  if(m==null)return'—';
+  const h=Math.floor(m/60),mn=m%60;
+  return `${h>0?h+'h ':''}${mn}m`;
+};
+const isoToLocal = iso => {
+  const normalized = String(iso).replace(' ', 'T');
+  const d = new Date(normalized);
+  if (isNaN(d.getTime())) return String(iso).substring(0, 16);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+function setThisMonth(f,t) {
+  const n=new Date(),y=n.getFullYear(),m=pad(n.getMonth()+1),l=new Date(y,n.getMonth()+1,0).getDate();
+  document.getElementById(f).value=`${y}-${m}-01`;
+  document.getElementById(t).value=`${y}-${m}-${l}`;
+}
+function setLastMonth(f,t) {
+  const n=new Date(),d=new Date(n.getFullYear(),n.getMonth()-1,1),y=d.getFullYear(),m=pad(d.getMonth()+1),l=new Date(y,d.getMonth()+1,0).getDate();
+  document.getElementById(f).value=`${y}-${m}-01`;
+  document.getElementById(t).value=`${y}-${m}-${l}`;
+}
 function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',['attendance','employees','payroll'][i]===name));
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.getElementById(`tab-${name}`).classList.add('active');
 }
-
 let toastTimer=null;
 function showToast(msg,type='info') {
-  const el=document.getElementById('toast'); el.textContent=msg; el.className=`show ${type}`;
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className=`show ${type}`;
   clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.className='',3400);
 }
-
 function getGASUrl() {
   const v = document.getElementById('att-gas-url').value.trim();
   if(v){gasUrl=v;localStorage.setItem('gasUrl',v);}
   return gasUrl;
 }
-
 async function pingGAS() {
-  const url=getGASUrl();
-  if(!url){showToast('⚠️ GAS URLを入力してください','error');return;}
-  try { const r=await fetch(`${url}?action=ping`); const j=await r.json(); showToast(j.status==='ok'?'✅ 接続成功':'⚠️ '+j.message,j.status==='ok'?'success':'error'); }
-  catch(e){showToast('❌ 接続失敗: '+e.message,'error');}
+  const url=getGASUrl(); if(!url){showToast('⚠️ GAS URLを入力してください','error');return;}
+  try {
+    const r=await fetch(`${url}?action=ping`); const j=await r.json();
+    showToast(j.status==='ok'?'✅ 接続成功':'⚠️ '+j.message,j.status==='ok'?'success':'error');
+  } catch(e){showToast('❌ 接続失敗: '+e.message,'error');}
 }
 
 // ══════════════════════════════════════════════
-//  ① 勤怠履歴
+// ① 勤怠履歴
 // ══════════════════════════════════════════════
 async function fetchAttendance() {
   const url=getGASUrl(), from=document.getElementById('fetch-from').value, to=document.getElementById('fetch-to').value;
   if(!url){showToast('⚠️ GAS URLを入力してください','error');return;}
   if(!from||!to){showToast('⚠️ 期間を設定してください','error');return;}
   if(pendingChanges.length>0&&!confirm('未送信の変更があります。続けますか？'))return;
-
-  const btn=document.getElementById('btn-fetch');
-  const pw=document.getElementById('fetch-prog-wrap');
+  const btn=document.getElementById('btn-fetch'); const pw=document.getElementById('fetch-prog-wrap');
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span>取得中...'; pw.style.display='block';
   document.getElementById('fetch-prog').style.width='30%';
-
   try {
     const res=await fetch(`${url}?action=fetch&from=${from}&to=${to}`);
     document.getElementById('fetch-prog').style.width='70%';
-    const json=await res.json();
-    if(json.status!=='ok') throw new Error(json.message);
-    fetchedRecords=json.records||[];
-    pendingChanges=[];
+    const json=await res.json(); if(json.status!=='ok') throw new Error(json.message);
+    fetchedRecords=json.records||[]; pendingChanges=[];
     for(const r of fetchedRecords) if(r.id) await upsertRecord({...r,synced:1});
     document.getElementById('fetch-prog').style.width='100%';
     document.getElementById('fetch-status').textContent=`✅ ${fetchedRecords.length}件取得`;
-    buildFilterOptions(); applyFilter(); updateChangeBadge();
-    showToast(`${fetchedRecords.length}件取得しました`,'success');
-  } catch(e) {
-    showToast('❌ 取得失敗: '+e.message,'error');
-    document.getElementById('fetch-status').textContent='❌ 取得失敗';
-  } finally {
-    btn.disabled=false; btn.innerHTML='GSSから取得';
-    setTimeout(()=>{pw.style.display='none';document.getElementById('fetch-prog').style.width='0%';},800);
-  }
+    buildFilterOptions(); applyFilter();
+  } catch(e){showToast('❌ 取得失敗: '+e.message,'error');} finally{btn.disabled=false;btn.innerHTML='GSSから取得';setTimeout(()=>{pw.style.display='none';},1000);}
 }
-
 function buildFilterOptions() {
-  const emps=[...new Set(fetchedRecords.map(r=>r.employeeName))].sort();
-  const sel=document.getElementById('filter-emp'); const cur=sel.value;
-  sel.innerHTML='<option value="">従業員（全員）</option>'+emps.map(e=>`<option value="${e}"${e===cur?' selected':''}>${e}</option>`).join('');
+  const s=document.getElementById('filter-emp'), curr=s.value;
+  const names=[...new Set(fetchedRecords.map(r=>r.employeeName))].sort();
+  s.innerHTML='<option value="">従業員（全員）</option>'+names.map(n=>`<option value="${n}">${n}</option>`).join('');
+  if(names.includes(curr)) s.value=curr;
 }
 function applyFilter() {
   const emp=document.getElementById('filter-emp').value, shift=document.getElementById('filter-shift').value;
-  const filtered=fetchedRecords.filter(r=>(!emp||r.employeeName===emp)&&(!shift||r.shift===shift));
-  renderAttTable(filtered); updateStats(filtered);
+  let fil=fetchedRecords;
+  if(emp) fil=fil.filter(r=>r.employeeName===emp);
+  if(shift) fil=fil.filter(r=>r.shift===shift);
+  renderAttendanceTable(fil); updateStats(fil);
 }
 function clearFilter(){document.getElementById('filter-emp').value='';document.getElementById('filter-shift').value='';applyFilter();}
-
-function renderAttTable(records) {
-  const tbody=document.getElementById('att-body');
-  if(!records.length){tbody.innerHTML='<tr><td colspan="9" class="empty-msg">データがありません</td></tr>';updateSelCount();return;}
-  tbody.innerHTML=[...records].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(r=>{
-    const isNew=pendingChanges.some(c=>c.action==='upsert'&&c.record._isNew&&c.record.id===r.id);
-    const isEd =pendingChanges.some(c=>c.action==='upsert'&&!c.record._isNew&&c.record.id===r.id);
-    const rc=isNew?'row-new':isEd?'row-edited':'';
-    const sb=isNew?'<span class="badge badge-new">新規</span>':isEd?'<span class="badge badge-edited">編集済</span>':'';
-    const sc=r.shift==='昼勤'?'day':'night'; const pc=r.punchType==='出勤'?'in':'out';
-    return `<tr class="${rc}"><td class="check-col"><input type="checkbox" class="row-check" data-id="${r.id}" onchange="updateSelCount()"/></td>
-      <td>${sb}</td><td class="mono">${r.date||''}</td><td class="mono">${fmtDT(r.punchTime)}</td>
-      <td>${r.employeeName}</td><td><span class="badge badge-${sc}">${r.shift}</span></td>
-      <td><span class="badge badge-${pc}">${r.punchType}</span></td>
-      <td><span class="badge badge-dur">${fmtMin(r.durationMinutes)}</span></td>
+function renderAttendanceTable(list) {
+  const tbody=document.getElementById('att-body'); if(!list.length){tbody.innerHTML='<tr><td colspan="9" class="empty-msg">該当データがありません</td></tr>';return;}
+  tbody.innerHTML=list.map(r=>{
+    const stBadge=r.synced===0?(r._isNew?'<span class="badge badge-new">新規未送</span>':'<span class="badge badge-edited">修正未送</span>'):'';
+    const sBadge=r.shift==='昼勤'?`<span class="badge badge-day">${r.shift}</span>`:`<span class="badge badge-night">${r.shift}</span>`;
+    const pBadge=r.punchType==='出勤'?`<span class="badge badge-in">${r.punchType}</span>`:`<span class="badge badge-out">${r.punchType}</span>`;
+    const durBadge=r.punchType==='退勤'?`<span class="badge badge-dur">${fmtMin(r.durationMinutes)}</span>`:'—';
+    return `<tr class="${r.synced===0?(r._isNew?'row-new':'row-edited'):''}">
+      <td class="check-col"><input type="checkbox" class="rec-chk" data-id="${r.id}" onchange="updateSelectedCount()" /></td>
+      <td>${stBadge}</td><td class="mono">${r.date||'—'}</td><td class="mono">${fmtDT(r.punchTime)}</td>
+      <td><strong>${r.employeeName}</strong></td><td>${sBadge}</td><td>${pBadge}</td><td>${durBadge}</td>
       <td><button class="btn-row" onclick="openAttModal(${r.id})">編集</button></td></tr>`;
   }).join('');
-  updateSelCount();
+  document.getElementById('check-all').checked=false; updateSelectedCount();
 }
-function updateStats(records){
-  const b=document.getElementById('att-stats');
-  if(!records.length){b.style.display='none';return;}
-  b.style.display='flex';
-  document.getElementById('stat-count').textContent=records.length;
-  document.getElementById('stat-emp').textContent=new Set(records.map(r=>r.employeeName)).size;
-  const mins=records.filter(r=>r.durationMinutes).reduce((s,r)=>s+r.durationMinutes,0);
-  document.getElementById('stat-hours').textContent=`${Math.floor(mins/60)}h`;
+function updateStats(list) {
+  const div=document.getElementById('att-stats'); if(!list.length){div.style.display='none';return;} div.style.display='flex';
+  const emps=new Set(list.map(r=>r.employeeName)).size;
+  const tot=list.reduce((sum,r)=>sum+(Number(r.durationMinutes)||0),0);
+  document.getElementById('stat-count').textContent=list.length;
+  document.getElementById('stat-emp').textContent=emps;
+  document.getElementById('stat-hours').textContent=Math.round(tot/60)+'h';
 }
-function toggleAll(cb){document.querySelectorAll('.row-check').forEach(c=>c.checked=cb.checked);updateSelCount();}
-function updateSelCount(){
-  const n=document.querySelectorAll('.row-check:checked').length;
-  document.getElementById('selected-count').textContent=n;
-  document.getElementById('btn-del-sel').disabled=n===0;
+function toggleAll(chk){document.querySelectorAll('.rec-chk').forEach(c=>c.checked=chk.checked);updateSelectedCount();}
+function updateSelectedCount() {
+  const cnt=document.querySelectorAll('.rec-chk:checked').length;
+  document.getElementById('selected-count').textContent=cnt;
+  document.getElementById('btn-del-sel').disabled=(cnt===0);
 }
-function updateChangeBadge(){
-  const n=pendingChanges.length;
-  document.getElementById('change-bar').style.display=n>0?'flex':'none';
-  document.getElementById('change-count').textContent=`${n} 件`;
+function addChange(action,record){pendingChanges=pendingChanges.filter(c=>c.record.id!==record.id);pendingChanges.push({action,record});updateChangeBadge();}
+function updateChangeBadge() {
+  const bar=document.getElementById('change-bar');
+  if(!pendingChanges.length){bar.style.display='none';return;}
+  bar.style.display='flex'; document.getElementById('change-count').textContent=`${pendingChanges.length} 件`;
 }
-function addChange(action,record){
-  pendingChanges=pendingChanges.filter(c=>!(c.action===action&&c.record.id===record.id));
-  pendingChanges.push({action,record}); updateChangeBadge();
-}
-function discardChanges(){if(!confirm('変更を破棄しますか？'))return;pendingChanges=[];updateChangeBadge();applyFilter();showToast('変更を破棄しました','info');}
-async function sendChanges(){
-  const url=getGASUrl();
-  if(!url){showToast('⚠️ GAS URLを入力してください','error');return;}
+function discardChanges(){if(!confirm('すべての変更を破棄してGSSから再取得しますか？'))return;pendingChanges=[];updateChangeBadge();fetchAttendance();}
+async function sendChanges() {
+  const url=getGASUrl(); if(!url||!pendingChanges.length)return;
   const btn=document.getElementById('btn-send'); btn.disabled=true; btn.innerHTML='<span class="spinner"></span>送信中...';
   try {
     const ups=pendingChanges.filter(c=>c.action==='upsert').map(c=>c.record);
     const dels=pendingChanges.filter(c=>c.action==='delete').map(c=>c.record.id);
-    if(ups.length){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'upsert',records:ups})});const j=await r.json();if(j.status!=='ok')throw new Error(j.message);}
-    if(dels.length){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'delete',ids:dels})});const j=await r.json();if(j.status!=='ok')throw new Error(j.message);}
-    for(const r of ups)  await upsertRecord({...r,synced:1});
+    if(ups.length){
+      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'upsert',records:ups})});
+      const j=await r.json(); if(j.status!=='ok')throw new Error(j.message);
+    }
+    if(dels.length){
+      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'delete',ids:dels})});
+      const j=await r.json(); if(j.status!=='ok')throw new Error(j.message);
+    }
+    for(const r of ups) await upsertRecord({...r,synced:1});
     for(const id of dels) await delRecById(id);
-    showToast(`✅ ${pendingChanges.length}件を送信しました`,'success');
-    pendingChanges=[]; updateChangeBadge();
-  } catch(e){showToast('❌ 送信失敗: '+e.message,'error');}
-  finally{btn.disabled=false;btn.innerHTML='まとめて送信';}
+    showToast(`✅ ${pendingChanges.length}件を送信しました`,'success'); pendingChanges=[]; updateChangeBadge(); applyFilter();
+  } catch(e){showToast('❌ 送信失敗: '+e.message,'error');} finally{btn.disabled=false;btn.innerHTML='まとめて送信';}
 }
-
-// 打刻モーダル
 function openAttModal(id) {
   const allEmps=[...new Set([...masterEmployees.map(e=>e.name),...fetchedRecords.map(r=>r.employeeName)])].sort();
   document.getElementById('modal-emp-sel').innerHTML=allEmps.map(n=>`<option value="${n}">${n}</option>`).join('');
   if(id===null){
-    document.getElementById('att-modal-title').textContent='＋ 新規打刻登録';
-    document.getElementById('modal-rec-id').value='';
-    document.getElementById('modal-emp-sel').value=allEmps[0]||'';
-    document.getElementById('modal-shift').value='昼勤';
-    document.getElementById('modal-punch').value='出勤';
-    document.getElementById('modal-ptime').value=isoToLocal(new Date().toISOString());
-    document.getElementById('modal-date').value=new Date().toISOString().substring(0,10);
-    document.getElementById('modal-dur').value='';
+    document.getElementById('att-modal-title').textContent='＋ 新規打刻登録'; document.getElementById('modal-rec-id').value='';
+    document.getElementById('modal-emp-sel').value=allEmps[0]||''; document.getElementById('modal-shift').value='昼勤';
+    document.getElementById('modal-punch').value='出勤'; document.getElementById('modal-ptime').value=isoToLocal(new Date().toISOString());
+    document.getElementById('modal-date').value=new Date().toISOString().substring(0,10); document.getElementById('modal-dur').value='';
   } else {
     const r=fetchedRecords.find(x=>x.id===id); if(!r)return;
-    document.getElementById('att-modal-title').textContent='✏️ 打刻レコードを編集';
-    document.getElementById('modal-rec-id').value=r.id;
-    document.getElementById('modal-emp-sel').value=r.employeeName;
-    document.getElementById('modal-shift').value=r.shift;
-    document.getElementById('modal-punch').value=r.punchType;
-    document.getElementById('modal-ptime').value=isoToLocal(r.punchTime);
-    document.getElementById('modal-date').value=r.date||r.punchTime.substring(0,10);
-    document.getElementById('modal-dur').value=r.durationMinutes??'';
+    document.getElementById('att-modal-title').textContent='✏️ 打刻レコードを編集'; document.getElementById('modal-rec-id').value=r.id;
+    document.getElementById('modal-emp-sel').value=r.employeeName; document.getElementById('modal-shift').value=r.shift;
+    document.getElementById('modal-punch').value=r.punchType; document.getElementById('modal-ptime').value=isoToLocal(r.punchTime);
+    document.getElementById('modal-date').value=r.date||r.punchTime.substring(0,10); document.getElementById('modal-dur').value=r.durationMinutes??'';
   }
   document.getElementById('att-modal').classList.remove('hidden');
 }
 function closeAttModal(e){if(e&&e.target!==document.getElementById('att-modal'))return;document.getElementById('att-modal').classList.add('hidden');}
 async function saveAttRecord(){
-  const idVal=document.getElementById('modal-rec-id').value;
-  const empName=document.getElementById('modal-emp-sel').value.trim();
-  const shift=document.getElementById('modal-shift').value;
-  const punchType=document.getElementById('modal-punch').value;
-  const ptLocal=document.getElementById('modal-ptime').value;
-  const dateVal=document.getElementById('modal-date').value;
-  const durVal=document.getElementById('modal-dur').value;
+  const idVal=document.getElementById('modal-rec-id').value, empName=document.getElementById('modal-emp-sel').value.trim();
+  const shift=document.getElementById('modal-shift').value, punchType=document.getElementById('modal-punch').value;
+  const ptLocal=document.getElementById('modal-ptime').value, dateVal=document.getElementById('modal-date').value, durVal=document.getElementById('modal-dur').value;
   if(!empName||!ptLocal||!dateVal){showToast('⚠️ 必須項目を入力してください','error');return;}
-  const punchISO=new Date(ptLocal).toISOString();
-  const isNew=!idVal;
+  const punchISO=new Date(ptLocal).toISOString(), isNew=!idVal;
   const record={
-    id:isNew?Date.now():Number(idVal),
-    employeeName:empName,shift,punchType,
-    punchTime:punchISO,punchTimeRaw:punchISO,
-    date:dateVal,durationMinutes:durVal!==''?Number(durVal):null,
-    synced:0,syncedAt:null,_isNew:isNew,
+    id:isNew?Date.now():Number(idVal), employeeName:empName,shift,punchType, punchTime:punchISO,punchTimeRaw:punchISO,
+    date:dateVal,durationMinutes:durVal!==''?Number(durVal):null, synced:0,syncedAt:null,_isNew:isNew,
   };
-  if(isNew) fetchedRecords.push(record);
-  else { const idx=fetchedRecords.findIndex(r=>r.id===record.id); if(idx>=0)fetchedRecords[idx]=record; }
-  await upsertRecord(record);
-  addChange('upsert',record);
-  document.getElementById('att-modal').classList.add('hidden');
-  buildFilterOptions(); applyFilter();
-  showToast(isNew?'✅ 新規レコードを追加しました':'✅ レコードを更新しました','success');
+  if(isNew) fetchedRecords.push(record); else { const idx=fetchedRecords.findIndex(r=>r.id===record.id); if(idx>=0)fetchedRecords[idx]=record; }
+  await upsertRecord(record); addChange('upsert',record); document.getElementById('att-modal').classList.add('hidden');
+  buildFilterOptions(); applyFilter(); showToast(isNew?'✅ 新規レコードを追加しました':'✅ レコードを更新しました','success');
 }
-
-// 削除
-let confirmOkFn=null;
-function showConfirm(title,body,onOk){
-  document.getElementById('confirm-title').textContent=title;
-  document.getElementById('confirm-body').textContent=body;
-  document.getElementById('confirm-csv-chk').checked=true;
+let confirmResolve=null;
+function openConfirm(title,body,onOk){
+  document.getElementById('confirm-title').textContent=title; document.getElementById('confirm-body').textContent=body;
   document.getElementById('confirm-overlay').classList.remove('hidden');
-  document.getElementById('confirm-ok').onclick=()=>{closeConfirm();onOk(document.getElementById('confirm-csv-chk').checked);};
+  document.getElementById('confirm-ok').onclick=()=>{closeConfirm();onOk();};
 }
 function closeConfirm(){document.getElementById('confirm-overlay').classList.add('hidden');}
-
 function confirmDeleteSelected(){
-  const ids=[...document.querySelectorAll('.row-check:checked')].map(c=>Number(c.dataset.id));
-  if(!ids.length)return;
-  showConfirm('選択レコードの削除',`選択した ${ids.length} 件を削除します。GSSへの反映は「まとめて送信」で行われます。`,doCSV=>executeDelete(ids,doCSV));
+  const ids=Array.from(document.querySelectorAll('.rec-chk:checked')).map(c=>Number(c.dataset.id)); if(!ids.length)return;
+  openConfirm('選択レコードの削除',`${ids.length}件の選択されたレコードを削除しますか？`,async()=>{
+    if(document.getElementById('confirm-csv-chk').checked) downloadCSVFromList(fetchedRecords.filter(r=>ids.includes(r.id)),'削除退避_選択');
+    for(const id of ids){
+      const r=fetchedRecords.find(x=>x.id===id);
+      if(r){
+        if(r.synced===1) addChange('delete',r);
+        else { fetchedRecords=fetchedRecords.filter(x=>x.id!==id); pendingChanges=pendingChanges.filter(c=>c.record.id!==id); }
+        await delRecById(id);
+      }
+    }
+    updateChangeBadge(); applyFilter(); showToast('🗑️ 選択レコードを削除しました(未送信を含みます)','info');
+  });
 }
 function confirmDeleteRange(){
   const from=document.getElementById('fetch-from').value, to=document.getElementById('fetch-to').value;
-  const targets=fetchedRecords.filter(r=>r.date&&r.date>=from&&r.date<=to);
-  if(!targets.length){showToast('⚠️ 対象データがありません','error');return;}
-  showConfirm('期間一括削除',`取得期間（${from} 〜 ${to}）の ${targets.length} 件を削除します。`,doCSV=>executeDelete(targets.map(r=>r.id),doCSV));
+  if(!from||!to){showToast('⚠️ 取得期間を設定してください。その範囲が削除対象になります','error');return;}
+  openConfirm('期間内レコードの削除',`現在設定されている期間 [ ${from} 〜 ${to} ] の全レコードを削除しますか？`,async()=>{
+    const targets=fetchedRecords.filter(r=>r.date>=from&&r.date<=to); if(!targets.length){showToast('削除対象のレコードがありません','info');return;}
+    if(document.getElementById('confirm-csv-chk').checked) downloadCSVFromList(targets,`削除退避_${from}_${to}`);
+    for(const r of targets){
+      if(r.synced===1) addChange('delete',r);
+      else { fetchedRecords=fetchedRecords.filter(x=>x.id!==r.id); pendingChanges=pendingChanges.filter(c=>c.record.id!==r.id); }
+      await delRecById(r.id);
+    }
+    updateChangeBadge(); applyFilter(); showToast('🗑️ 期間内レコードを削除しました','info');
+  });
 }
-async function executeDelete(ids,doCSV){
-  if(doCSV){
-    const targets=fetchedRecords.filter(r=>ids.includes(r.id));
-    const csv='\uFEFF'+['レコードID,従業員名,勤務種別,打刻種別,日付,打刻日時,勤務時間(分)',...targets.map(r=>[r.id,r.employeeName,r.shift,r.punchType,r.date,fmtDT(r.punchTime),r.durationMinutes??''].join(','))].join('\n');
-    const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})),download:`削除データ_${new Date().toISOString().substring(0,10)}.csv`});
-    a.click();URL.revokeObjectURL(a.href);
-  }
-  for(const id of ids){const r=fetchedRecords.find(x=>x.id===id);if(r)addChange('delete',r);await delRecById(id);}
-  fetchedRecords=fetchedRecords.filter(r=>!ids.includes(r.id));
-  buildFilterOptions();applyFilter();
-  showToast(`${ids.length}件を削除しました（未送信）`,'info');
+function downloadCSVFromList(list,fileName){
+  const hdrs='レコードID,従業員名,勤務種別,打刻種別,日付,打刻時刻(丸め),同期状態';
+  const rows=list.map(r=>[r.id,r.employeeName,r.shift,r.punchType,r.date,fmtDT(r.punchTime),r.synced].join(','));
+  const csv='\uFEFF'+[hdrs,...rows].join('\n');
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})),download:`${fileName}.csv`});
+  a.click(); URL.revokeObjectURL(a.href);
 }
 
 // ══════════════════════════════════════════════
-//  ② 従業員マスター
+// ② 従業員マスター
 // ══════════════════════════════════════════════
-async function fetchEmployees(){
-  const url=getGASUrl();
-  if(!url){showToast('⚠️ GAS URLを入力してください','error');return;}
+async function fetchEmployees() {
+  const url=getGASUrl(); if(!url){showToast('⚠️ GAS URLを入力してください','error');return;}
   try {
-    const res=await fetch(`${url}?action=fetchEmployees`);
-    const json=await res.json();
-    if(json.status!=='ok')throw new Error(json.message);
-    masterEmployees=json.employees||[];
-    await clearEmps();
-    for(const e of masterEmployees) await putEmp(e);
-    empPendingChanges=[];
-    renderEmpMaster();
-    showToast(`従業員 ${masterEmployees.length}名 を取得しました`,'success');
-  } catch(e){showToast('❌ 取得失敗: '+e.message,'error');}
+    const res=await fetch(`${url}?action=fetchEmployees`); const json=await res.json();
+    if(json.status!=='ok') throw new Error(json.message);
+    masterEmployees=json.employees||[]; empPendingChanges=[];
+    const store=db.transaction('employees','readwrite').objectStore('employees');
+    await store.clear(); for(const e of masterEmployees) if(e.id) await store.put(e);
+    renderEmpMaster(); document.getElementById('btn-save-emps').disabled=true;
+    document.getElementById('emp-save-status').textContent=`GSSから${masterEmployees.length}名読み込みました`;
+  } catch(e){showToast('❌ 従業員取得失敗: '+e.message,'error');}
 }
-
-function renderEmpMaster(){
-  const grid=document.getElementById('emp-master-grid');
-  if(!masterEmployees.length){
-    grid.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted);font-size:.88rem;">従業員が登録されていません</div>';
-    document.getElementById('btn-save-emps').disabled=true;
-    return;
-  }
+function renderEmpMaster() {
+  const grid=document.getElementById('emp-master-grid'); if(!masterEmployees.length){grid.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted);">登録されている従業員はいません</div>';return;}
   grid.innerHTML=masterEmployees.map(e=>{
-    const isNew=empPendingChanges.some(c=>c.action==='upsert'&&c.emp._isNew&&c.emp.id===e.id);
-    const isEd =empPendingChanges.some(c=>c.action==='upsert'&&!c.emp._isNew&&c.emp.id===e.id);
-    const rc=isNew?'row-new':isEd?'row-edited':'';
-    return `<div class="emp-master-row ${rc}" data-id="${e.id}">
-      <div class="emp-master-name">${e.name}${isNew?'&nbsp;<span class="badge badge-new">新規</span>':isEd?'&nbsp;<span class="badge badge-edited">変更</span>':''}</div>
-      <div>
-        <div class="emp-input-label">基本時給（円）</div>
-        <input type="number" class="emp-num-input" data-field="wage"
-          value="${e.wage||''}" min="0" step="10" placeholder="1200"
-          oninput="onWageInput('${e.id}',this.value)" />
-      </div>
-      <div>
-        <div class="emp-input-label">深夜手当<br>（円/時）</div>
-        <input type="number" class="emp-num-input" data-field="nightAllowance"
-          value="${e.nightAllowance??''}" min="0" step="1" placeholder="自動"
-          oninput="markEmpChanged('${e.id}')" />
-        <div class="auto-hint" id="hint-night-${e.id}"></div>
-      </div>
-      <div>
-        <div class="emp-input-label">土日祝手当<br>（円/時）</div>
-        <input type="number" class="emp-num-input" data-field="holidayAllowance"
-          value="${e.holidayAllowance??''}" min="0" step="1" placeholder="自動"
-          oninput="markEmpChanged('${e.id}')" />
-        <div class="auto-hint" id="hint-holiday-${e.id}"></div>
-      </div>
-      <div>
-        <div class="emp-input-label">土日祝深夜<br>（円/時）</div>
-        <input type="number" class="emp-num-input" data-field="holidayNightAllowance"
-          value="${e.holidayNightAllowance??''}" min="0" step="1" placeholder="自動"
-          oninput="markEmpChanged('${e.id}')" />
-        <div class="auto-hint" id="hint-hnight-${e.id}"></div>
-      </div>
-      <button class="emp-del-btn" onclick="deleteEmpLocally('${e.id}')">削除</button>
-    </div>`;
+    const pUps=empPendingChanges.filter(c=>c.emp.id===e.id); const isEdited=pUps.length&&pUps[0].action==='upsert'; const isNew=e._isNew;
+    return `<div class="emp-master-row ${isNew?'row-new':(isEdited?'row-edited':'')}" data-id="${e.id}">
+      <div class="emp-master-name"><strong>${e.name}</strong> ${isNew?'<span class="badge badge-new">新規</span>':(isEdited?'<span class="badge badge-edited">変更</span>':'')}</div>
+      <div><input type="number" class="emp-num-input" data-field="wage" value="${e.wage||0}" oninput="autoCalcAllowances(${e.id},this.value)" /></div>
+      <div><div class="emp-input-label" id="hint-night-${e.id}"></div><input type="number" class="emp-num-input" data-field="nightAllowance" value="${e.nightAllowance||0}" oninput="markEmpChanged(${e.id})" /></div>
+      <div><div class="emp-input-label" id="hint-holiday-${e.id}"></div><input type="number" class="emp-num-input" data-field="holidayAllowance" value="${e.holidayAllowance||0}" oninput="markEmpChanged(${e.id})" /></div>
+      <div><div class="emp-input-label" id="hint-hnight-${e.id}"></div><input type="number" class="emp-num-input" data-field="holidayNightAllowance" value="${e.holidayNightAllowance||0}" oninput="markEmpChanged(${e.id})" /></div>
+      <div style="text-align:right;"><button class="emp-del-btn" onclick="deleteEmpLocally(${e.id})">削除</button></div></div>`;
   }).join('');
-  // 基本時給が入力済みの場合はヒントを再表示
-  masterEmployees.forEach(e => { if(e.wage) showAutoHint(e.id, e.wage); });
-  document.getElementById('btn-save-emps').disabled=empPendingChanges.length===0;
+  masterEmployees.forEach(e=>showAutoHint(e.id,e.wage));
 }
-
-/** 基本時給入力時: 自動計算ヒントを表示し、手当欄が空なら自動入力 */
-function onWageInput(id, rawVal){
-  const wage = Math.floor(Number(rawVal)) || 0;
-  showAutoHint(id, wage);
-  // 手当欄がまだ未入力（空）の場合のみ自動セット
-  const row = document.querySelector(`.emp-master-row[data-id="${id}"]`);
-  if(!row) return;
-  const nightIn   = row.querySelector('[data-field="nightAllowance"]');
-  const holidayIn = row.querySelector('[data-field="holidayAllowance"]');
-  const hNightIn  = row.querySelector('[data-field="holidayNightAllowance"]');
-  const autoNight   = Math.floor(wage * 1.25);
-  const autoHoliday = Math.floor(wage * 1.35);
-  const autoHNight  = Math.floor(wage * 1.60);
-  if(nightIn.value   === '') { nightIn.value   = autoNight;   nightIn.classList.add('auto-filled'); }
-  if(holidayIn.value === '') { holidayIn.value = autoHoliday; holidayIn.classList.add('auto-filled'); }
-  if(hNightIn.value  === '') { hNightIn.value  = autoHNight;  hNightIn.classList.add('auto-filled'); }
+function openEmpModal(){document.getElementById('new-emp-name').value='';document.getElementById('new-emp-wage').value='';document.getElementById('new-emp-night').value='';document.getElementById('new-emp-holiday').value='';document.getElementById('new-emp-hnight').value='';document.getElementById('emp-modal').classList.remove('hidden');}
+function closeEmpModal(e){if(e&&e.target!==document.getElementById('emp-modal'))return;document.getElementById('emp-modal').classList.add('hidden');}
+function autoCalcModalAllowances(val) {
+  const wage = Math.floor(Number(val)) || 0;
+  document.getElementById('new-emp-night').value = wage ? Math.floor(wage * 1.25) : '';
+  document.getElementById('new-emp-holiday').value = wage ? Math.floor(wage * 1.35) : '';
+  document.getElementById('new-emp-hnight').value = wage ? Math.floor(wage * 1.60) : '';
+}
+function autoCalcAllowances(id, wageVal) {
+  const wage = Math.floor(Number(wageVal)) || 0; showAutoHint(id, wage);
+  const row = document.querySelector(`.emp-master-row[data-id="${id}"]`); if(!row) return;
+  const nightIn = row.querySelector('[data-field="nightAllowance"]'), holidayIn = row.querySelector('[data-field="holidayAllowance"]'), hNightIn = row.querySelector('[data-field="holidayNightAllowance"]');
+  nightIn.value = Math.floor(wage * 1.25); holidayIn.value = Math.floor(wage * 1.35); hNightIn.value = Math.floor(wage * 1.60);
+  nightIn.classList.add('auto-filled'); holidayIn.classList.add('auto-filled'); hNightIn.classList.add('auto-filled');
   markEmpChanged(id);
 }
-
-/** ヒントラベルを更新（割増後の合計時給を表示） */
 function showAutoHint(id, wage){
-  wage = Math.floor(Number(wage)) || 0;
-  if(!wage) return;
-  const nh  = document.getElementById(`hint-night-${id}`);
-  const hh  = document.getElementById(`hint-holiday-${id}`);
-  const hnh = document.getElementById(`hint-hnight-${id}`);
-  // 割増後合計額 = 基本時給 + 割増分
-  if(nh)  nh.textContent  = `推奨: ¥${Math.floor(wage*1.25)}/時（×1.25）`;
-  if(hh)  hh.textContent  = `推奨: ¥${Math.floor(wage*1.35)}/時（×1.35）`;
-  if(hnh) hnh.textContent = `推奨: ¥${Math.floor(wage*1.60)}/時（×1.60）`;
+  wage = Math.floor(Number(wage)) || 0; if(!wage) return;
+  const nh = document.getElementById(`hint-night-${id}`), hh = document.getElementById(`hint-holiday-${id}`), hnh = document.getElementById(`hint-hnight-${id}`);
+  if(nh) nh.textContent = `標準25%:¥${Math.floor(wage*1.25)}`; if(hh) hh.textContent = `標準35%:¥${Math.floor(wage*1.35)}`; if(hnh) hnh.textContent = `標準60%:¥${Math.floor(wage*1.60)}`;
 }
-
 function markEmpChanged(id){
-  const row=document.querySelector(`.emp-master-row[data-id="${id}"]`);
-  if(!row)return;
-  const emp=masterEmployees.find(e=>e.id===id);
-  if(!emp)return;
-  emp.wage                 = Number(row.querySelector('[data-field="wage"]').value)||0;
-  emp.nightAllowance       = Number(row.querySelector('[data-field="nightAllowance"]').value)||0;
-  emp.holidayAllowance     = Number(row.querySelector('[data-field="holidayAllowance"]').value)||0;
+  const row=document.querySelector(`.emp-master-row[data-id="${id}"]`); if(!row)return; const emp=masterEmployees.find(e=>e.id===id); if(!emp)return;
+  emp.wage = Number(row.querySelector('[data-field="wage"]').value)||0;
+  emp.nightAllowance = Number(row.querySelector('[data-field="nightAllowance"]').value)||0;
+  emp.holidayAllowance = Number(row.querySelector('[data-field="holidayAllowance"]').value)||0;
   emp.holidayNightAllowance= Number(row.querySelector('[data-field="holidayNightAllowance"]').value)||0;
   empPendingChanges=empPendingChanges.filter(c=>!(c.action==='upsert'&&c.emp.id===id));
-  empPendingChanges.push({action:'upsert',emp:{...emp}});
-  document.getElementById('btn-save-emps').disabled=false;
-  // ヒント更新のみ（renderEmpMaster()は呼ばない→フォーカスが外れるため）
-  showAutoHint(id, emp.wage);
+  empPendingChanges.push({action:'upsert',emp:{...emp}}); document.getElementById('btn-save-emps').disabled=false; showAutoHint(id, emp.wage);
 }
-
 function deleteEmpLocally(id){
   if(!confirm('この従業員を削除しますか？\n（GSSへの反映は「変更をGSSに保存」で行われます）'))return;
   const emp=masterEmployees.find(e=>e.id===id);
-  if(emp){empPendingChanges=empPendingChanges.filter(c=>c.emp.id!==id);empPendingChanges.push({action:'delete',emp});}
-  masterEmployees=masterEmployees.filter(e=>e.id!==id);
-  renderEmpMaster();
-  document.getElementById('btn-save-emps').disabled=false;
-  showToast(`${emp?.name||''} を削除しました（未保存）`,'info');
-}
-
-function openEmpModal(){
-  document.getElementById('new-emp-name').value='';
-  document.getElementById('new-emp-wage').value='';
-  document.getElementById('new-emp-night').value='';
-  document.getElementById('new-emp-holiday').value='';
-  document.getElementById('new-emp-hnight').value='';
-  document.getElementById('modal-auto-preview').style.display='none';
-  document.getElementById('emp-modal').classList.remove('hidden');
-}
-function closeEmpModal(e){if(e&&e.target!==document.getElementById('emp-modal'))return;document.getElementById('emp-modal').classList.add('hidden');}
-
-/** モーダル内の基本時給入力時：プレビュー表示＋手当欄が空なら自動セット */
-function onModalWageInput(rawVal){
-  const wage=Math.floor(Number(rawVal))||0;
-  // 割増後の合計時給を表示（基本時給 + 割増分）
-  const autoNight  =Math.floor(wage*1.25);
-  const autoHoliday=Math.floor(wage*1.35);
-  const autoHNight =Math.floor(wage*1.60);
-  const prev=document.getElementById('modal-auto-preview');
-  if(wage>0){
-    prev.style.display='block';
-    document.getElementById('prev-night').textContent   =`深夜: ¥${autoNight}/時（×1.25）`;
-    document.getElementById('prev-holiday').textContent =`土日祝: ¥${autoHoliday}/時（×1.35）`;
-    document.getElementById('prev-hnight').textContent  =`土日祝深夜: ¥${autoHNight}/時（×1.60）`;
-  } else {
-    prev.style.display='none';
-  }
-  // 各手当欄が空の場合だけ自動セット
-  const ni=document.getElementById('new-emp-night');
-  const hi=document.getElementById('new-emp-holiday');
-  const hni=document.getElementById('new-emp-hnight');
-  if(wage>0){
-    if(ni.value ===''){ni.value =autoNight;   ni.classList.add('auto-filled');}
-    if(hi.value ===''){hi.value =autoHoliday; hi.classList.add('auto-filled');}
-    if(hni.value===''){hni.value=autoHNight;  hni.classList.add('auto-filled');}
+  if(emp){
+    empPendingChanges=empPendingChanges.filter(c=>c.emp.id!==id);
+    if(!emp._isNew) empPendingChanges.push({action:'delete',emp});
+    masterEmployees=masterEmployees.filter(e=>e.id!==id); renderEmpMaster(); document.getElementById('btn-save-emps').disabled=false;
   }
 }
-
 function addNewEmployee(){
-  const name=document.getElementById('new-emp-name').value.replace(/　/g,' ').replace(/\s+/g,' ').trim();
-  const wage               =Math.floor(Number(document.getElementById('new-emp-wage').value))||0;
-  const nightAllowance     =Math.floor(Number(document.getElementById('new-emp-night').value))||0;
-  const holidayAllowance   =Math.floor(Number(document.getElementById('new-emp-holiday').value))||0;
-  const holidayNightAllowance=Math.floor(Number(document.getElementById('new-emp-hnight').value))||0;
-  if(!name){showToast('⚠️ 従業員名を入力してください','error');return;}
-  const norm=name.toLowerCase().replace(/\s/g,'');
-  if(masterEmployees.some(e=>e.name.toLowerCase().replace(/\s/g,'')===norm)){showToast('⚠️ 同じ名前が既に存在します','error');return;}
-  const newEmp={id:String(Date.now()),name,wage,nightAllowance,holidayAllowance,holidayNightAllowance,_isNew:true};
-  masterEmployees.push(newEmp);
-  empPendingChanges.push({action:'upsert',emp:{...newEmp}});
-  document.getElementById('emp-modal').classList.add('hidden');
-  renderEmpMaster();
-  document.getElementById('btn-save-emps').disabled=false;
-  showToast(`✅ ${name} を追加しました（未保存）`,'success');
+  const name=document.getElementById('new-emp-name').value.trim(), wage=Number(document.getElementById('new-emp-wage').value)||0;
+  const night=Number(document.getElementById('new-emp-night').value)||Math.floor(wage*1.25), holiday=Number(document.getElementById('new-emp-holiday').value)||Math.floor(wage*1.35), hnight=Number(document.getElementById('new-emp-hnight').value)||Math.floor(wage*1.60);
+  if(!name){showToast('⚠️ 氏名を入力してください','error');return;}
+  if(masterEmployees.some(e=>e.name===name)){showToast('⚠️ 既に同名の従業員が登録されています','error');return;}
+  const newEmp={id:Date.now(),name,wage,nightAllowance:night,holidayAllowance:holiday,holidayNightAllowance:hnight,_isNew:true};
+  masterEmployees.push(newEmp); empPendingChanges.push({action:'upsert',emp:newEmp});
+  document.getElementById('emp-modal').classList.add('hidden'); renderEmpMaster(); document.getElementById('btn-save-emps').disabled=false; showToast(`✅ ${name}を追加しました。保存をお忘れなく`,'success');
 }
-
-async function saveEmployeesToGSS(){
-  const url=getGASUrl();
-  if(!url){showToast('⚠️ GAS URLを入力してください','error');return;}
-  const btn=document.getElementById('btn-save-emps'); btn.disabled=true; btn.innerHTML='<span class="spinner"></span>保存中...';
+async function saveEmployeesToGSS() {
+  const url=getGASUrl(); if(!url)return; const btn=document.getElementById('btn-save-emps');
+  btn.disabled=true; document.getElementById('emp-save-status').textContent='GSSにマスターを保存中...';
   try {
-    const ups=empPendingChanges.filter(c=>c.action==='upsert').map(c=>c.emp);
-    const dels=empPendingChanges.filter(c=>c.action==='delete').map(c=>c.emp.id);
-    if(ups.length){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'upsertEmployees',employees:ups})});const j=await r.json();if(j.status!=='ok')throw new Error(j.message);}
-    if(dels.length){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'deleteEmployees',ids:dels})});const j=await r.json();if(j.status!=='ok')throw new Error(j.message);}
-    // IndexedDBにも反映
-    for(const e of ups) await putEmp(e);
-    for(const id of dels) await delEmpById(id);
-    empPendingChanges=[];
-    document.getElementById('emp-save-status').textContent='✅ 保存しました';
-    setTimeout(()=>document.getElementById('emp-save-status').textContent='',2500);
-    showToast('従業員マスターをGSSに保存しました','success');
-    renderEmpMaster();
-  } catch(e){showToast('❌ 保存失敗: '+e.message,'error');}
-  finally{btn.disabled=false;btn.innerHTML='変更をGSSに保存';}
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'saveMaster',changes:empPendingChanges})});
+    const json=await res.json(); if(json.status!=='ok') throw new Error(json.message);
+    showToast(`✅ 従業員マスターの変更をGSSに同期しました (${empPendingChanges.length}件)`,'success');
+    empPendingChanges=[]; await fetchEmployees();
+  } catch(e){showToast('❌ マスター同期失敗: '+e.message,'error'); btn.disabled=false; document.getElementById('emp-save-status').textContent='❌ 同期失敗';}
 }
 
 // ══════════════════════════════════════════════
-//  ③ 給与計算 — データ取得
+// ③ 給与計算 (時間帯による深夜分割対応版)
 // ══════════════════════════════════════════════
 async function fetchPayrollData() {
-  const url  = getGASUrl();
-  const from = document.getElementById('pay-from').value;
-  const to   = document.getElementById('pay-to').value;
-  if (!url)       { showToast('⚠️ GAS URLを入力してください（GSS接続設定タブ）', 'error'); return; }
+  const url = getGASUrl(), from = document.getElementById('pay-from').value, to = document.getElementById('pay-to').value;
+  if (!url) { showToast('⚠️ GAS URLを入力してください', 'error'); return; }
   if (!from || !to) { showToast('⚠️ 計算期間を設定してください', 'error'); return; }
-  if (from > to)    { showToast('⚠️ 開始日が終了日より後です', 'error'); return; }
-
-  const btn = document.getElementById('btn-pay-fetch');
-  const pw  = document.getElementById('pay-fetch-prog-wrap');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>取得中...';
-  pw.style.display = 'block';
+  if (from > to) { showToast('⚠️ 開始日が終了日より後です', 'error'); return; }
+  
+  const btn = document.getElementById('btn-pay-fetch'), pw = document.getElementById('pay-fetch-prog-wrap');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>取得中...'; pw.style.display = 'block';
   document.getElementById('pay-fetch-prog').style.width = '10%';
   document.getElementById('pay-data-preview').style.display = 'none';
-  document.getElementById('btn-calc').disabled = true;
-  document.getElementById('btn-pay-csv').disabled = true;
+  document.getElementById('btn-calc').disabled = true; document.getElementById('btn-pay-csv').disabled = true;
   document.getElementById('payroll-result').style.display = 'none';
-
+  
   try {
-    // ── ① 打刻レコード取得 ──
     document.getElementById('pay-fetch-status').textContent = '打刻データ取得中...';
-    const recRes  = await fetch(`${url}?action=fetch&from=${from}&to=${to}`);
-    const recJson = await recRes.json();
+    const recRes = await fetch(`${url}?action=fetch&from=${from}&to=${to}`); const recJson = await recRes.json();
     if (recJson.status !== 'ok') throw new Error('打刻データ取得失敗: ' + recJson.message);
     payRecords = recJson.records || [];
     document.getElementById('pay-fetch-prog').style.width = '40%';
 
-    // ── ② 従業員マスター取得 ──
     document.getElementById('pay-fetch-status').textContent = '従業員マスター取得中...';
-    const empRes  = await fetch(`${url}?action=fetchEmployees`);
-    const empJson = await empRes.json();
+    const empRes = await fetch(`${url}?action=fetchEmployees`); const empJson = await empRes.json();
     if (empJson.status !== 'ok') throw new Error('従業員マスター取得失敗: ' + empJson.message);
     const empList = empJson.employees || [];
     payEmpMap = {};
     empList.forEach(e => {
       payEmpMap[e.name] = {
-        wage:                  e.wage                  || 0,
-        nightAllowance:        e.nightAllowance        || 0,
-        holidayAllowance:      e.holidayAllowance      || 0,
+        wage: e.wage || 0,
+        nightAllowance: e.nightAllowance || 0,
+        holidayAllowance: e.holidayAllowance || 0,
         holidayNightAllowance: e.holidayNightAllowance || 0,
       };
     });
     document.getElementById('pay-fetch-prog').style.width = '65%';
 
-    // ── ③ 祝日取得 ──
     document.getElementById('pay-fetch-status').textContent = '祝日データ取得中...';
     await ensureHolidays(from, to);
-    document.getElementById('pay-fetch-prog').style.width = '95%';
-
-    // ── 取得結果をプレビュー表示 ──
-    const recEmps    = new Set(payRecords.map(r => r.employeeName));
-    const masterEmps = Object.keys(payEmpMap);
-    // 打刻データにいるが従業員マスターにいない人を警告
-    const noMaster   = [...recEmps].filter(n => !payEmpMap[n]);
-
-    document.getElementById('prev-rec-count').textContent    = payRecords.length;
-    document.getElementById('prev-emp-count').textContent    = recEmps.size;
-    document.getElementById('prev-master-count').textContent = masterEmps.length;
-
-    // 祝日カウント
-    const fromYear = Number(from.substring(0, 4));
-    const toYear   = Number(to.substring(0, 4));
-    let holidayTotal = 0;
-    for (let y = fromYear; y <= toYear; y++) holidayTotal += holidayCache[y] ? holidayCache[y].size : 0;
-    document.getElementById('prev-holiday-count').textContent = `${holidayTotal}日`;
-
-    // 警告表示
-    const warnEl = document.getElementById('pay-data-warn');
-    if (noMaster.length > 0) {
-      warnEl.style.display = 'block';
-      warnEl.textContent = `⚠️ 以下の従業員は時給未設定のため給与が¥0になります: ${noMaster.join('、')}`;
-    } else {
-      warnEl.style.display = 'none';
-    }
-
-    document.getElementById('pay-data-preview').style.display = 'block';
     document.getElementById('pay-fetch-prog').style.width = '100%';
-    document.getElementById('pay-fetch-status').textContent = '✅ 取得完了';
+    document.getElementById('pay-fetch-status').textContent = '取得完了';
+
+    const uniqueEmpsInRecs = [...new Set(payRecords.map(r => r.employeeName))];
+    document.getElementById('prev-rec-count').textContent = payRecords.length;
+    document.getElementById('prev-emp-count').textContent = uniqueEmpsInRecs.length;
+    document.getElementById('prev-master-count').textContent = empList.length;
+    
+    const yFrom = from.substring(0,4), yTo = to.substring(0,4);
+    let holCount = 0;
+    for(let y=yFrom; y<=yTo; y++) { if(holidayCache[y]) holCount += holidayCache[y].size; }
+    document.getElementById('prev-holiday-count').textContent = `${holCount} 日`;
+
+    const missing = uniqueEmpsInRecs.filter(n => !payEmpMap[n]);
+    const warn = document.getElementById('pay-data-warn');
+    if (missing.length) {
+      warn.innerHTML = `⚠️ マスターに未登録の従業員が打刻に存在します（時給0円計算になります）:<br>${missing.join(', ')}`;
+      warn.style.display = 'block';
+    } else {
+      warn.style.display = 'none';
+    }
+    
+    document.getElementById('pay-data-preview').style.display = 'block';
     document.getElementById('btn-calc').disabled = false;
-    showToast(`データ取得完了 — 打刻${payRecords.length}件 / 従業員${masterEmps.length}名 / 祝日${holidayTotal}日`, 'success');
-
-  } catch (err) {
-    showToast('❌ ' + err.message, 'error');
-    document.getElementById('pay-fetch-status').textContent = '❌ 取得失敗';
-    document.getElementById('btn-calc').disabled = true;
+    showToast('✅ 計算に必要なデータを取得しました。給与計算を実行してください。', 'success');
+  } catch (e) {
+    showToast('❌ データ取得失敗: ' + e.message, 'error');
+    document.getElementById('pay-fetch-status').textContent = '❌ エラー';
   } finally {
-    btn.disabled  = false;
-    btn.innerHTML = 'GSSからデータ取得';
-    setTimeout(() => {
-      pw.style.display = 'none';
-      document.getElementById('pay-fetch-prog').style.width = '0%';
-    }, 800);
+    btn.disabled = false; btn.innerHTML = 'GSSからデータ取得';
+    setTimeout(() => { pw.style.display = 'none'; }, 1200);
   }
 }
 
-
-function calcNightMinutes(inDt,outDt){
-  if(!inDt||!outDt||outDt<=inDt)return 0;
-  let nm=0;
-  const base=new Date(inDt); base.setHours(0,0,0,0);
-  for(let d=0;d<3;d++){
-    const b=new Date(base); b.setDate(b.getDate()+d);
-    const ns=new Date(b); ns.setHours(22,0,0,0);
-    const ne=new Date(b); ne.setDate(ne.getDate()+1); ne.setHours(5,0,0,0);
-    const s=Math.max(inDt.getTime(),ns.getTime()), en=Math.min(outDt.getTime(),ne.getTime());
-    if(en>s)nm+=(en-s)/60000;
-  }
-  return nm;
-}
-
-/** 土日 or 国民の祝日かどうかを判定（YYYY-MM-DD形式） */
-function isHolidayDate(dateStr){
-  const d   = new Date(dateStr + 'T00:00:00');
-  const dow = d.getDay();
-  if (dow === 0 || dow === 6) return true;  // 土曜・日曜
-  // 祝日キャッシュを参照
+function isHolidayOrWeekend(dateStr) {
+  if (!dateStr) return false;
+  const d = new Date(dateStr + 'T00:00:00'); const dow = d.getDay();
+  if (dow === 0 || dow === 6) return true; 
   const year = dateStr.substring(0, 4);
   if (holidayCache[year] && holidayCache[year].has(dateStr)) return true;
   return false;
 }
 
-/**
- * GASから指定期間の祝日を取得してキャッシュに格納する
- * 同じ年のキャッシュがあればスキップ（セッション中は再取得しない）
- */
 async function ensureHolidays(from, to) {
-  const url = getGASUrl();
-  if (!url) return;  // URL未設定時はスキップ（土日判定のみ）
-
-  // from〜toに含まれる年を列挙
-  const fromYear = Number(from.substring(0, 4));
-  const toYear   = Number(to.substring(0, 4));
-  const years    = [];
-  for (let y = fromYear; y <= toYear; y++) {
-    if (!holidayCache[y]) years.push(y);
-  }
-  if (!years.length) return;  // 全年キャッシュ済み
-
+  const url = getGASUrl(); if (!url) return;
+  const fromYear = Number(from.substring(0, 4)), toYear = Number(to.substring(0, 4));
+  const years = [];
+  for (let y = fromYear; y <= toYear; y++) { if (!holidayCache[y]) years.push(y); }
+  if (!years.length) return;
   try {
-    // 年をまとめて1リクエストで取得（from〜toをそのまま渡す）
-    const fetchFrom = `${fromYear}-01-01`;
-    const fetchTo   = `${toYear}-12-31`;
-    const res  = await fetch(`${url}?action=fetchHolidays&from=${fetchFrom}&to=${fetchTo}`);
-    const json = await res.json();
+    const fetchFrom = `${fromYear}-01-01`, fetchTo = `${toYear}-12-31`;
+    const res = await fetch(`${url}?action=fetchHolidays&from=${fetchFrom}&to=${fetchTo}`); const json = await res.json();
     if (json.status !== 'ok') throw new Error(json.message);
-
-    // 年ごとにSetへ分類してキャッシュ
-    for (let y = fromYear; y <= toYear; y++) {
-      holidayCache[y] = new Set();
-    }
-    (json.holidays || []).forEach(d => {
-      const y = d.substring(0, 4);
-      if (holidayCache[y]) holidayCache[y].add(d);
-    });
-
-    const total = json.holidays ? json.holidays.length : 0;
-    console.log(`祝日キャッシュ更新: ${years.join(',')}年 計${total}日`);
+    for (let y = fromYear; y <= toYear; y++) { holidayCache[y] = new Set(); }
+    (json.holidays || []).forEach(d => { const y = d.substring(0, 4); if (holidayCache[y]) holidayCache[y].add(d); });
   } catch (err) {
-    // 取得失敗しても土日判定だけで続行（エラーは無視）
     console.warn('祝日取得失敗（土日判定のみで続行）:', err.message);
     years.forEach(y => { holidayCache[y] = new Set(); });
   }
 }
 
-// ══════════════════════════════════════════════
-//  ③ 給与計算 — 計算実行
-// ══════════════════════════════════════════════
-async function calcPayroll(){
-  const from = document.getElementById('pay-from').value;
-  const to   = document.getElementById('pay-to').value;
+function togglePayDetail(id) {
+  const row = document.getElementById(id);
+  const arrow = document.getElementById(id + '-arrow');
+  if (!row) return;
+  const isOpen = row.style.display !== 'none';
+  row.style.display = isOpen ? 'none' : '';
+  if (arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
+}
 
-  if (!payRecords.length) {
-    showToast('⚠️ 先に「GSSからデータ取得」を実行してください', 'error');
-    return;
-  }
+function calcPayroll() {
+  const from = document.getElementById('pay-from').value, to = document.getElementById('pay-to').value;
+  const transportFee = Number(document.getElementById('transport-fee').value) || 0;
+  if (!payRecords.length) { showToast('⚠️ 対象データがありません。期間を確認し再取得してください', 'error'); return; }
 
-  const outs = payRecords.filter(r => r.punchType === '退勤' && r.durationMinutes > 0);
-  if (!outs.length) {
-    showToast('⚠️ 該当期間に勤務時間が記録された退勤データがありません', 'error');
-    return;
-  }
-
-  const agg = {};
-  for (const r of outs) {
-    const nm = r.employeeName;
-    if (!agg[nm]) agg[nm] = {
-      name: nm, uniqueDays: new Set(),
-      totalMin: 0, normalMin: 0, nightMin: 0, holidayMin: 0, holidayNightMin: 0,
-    };
-    agg[nm].uniqueDays.add(r.date);
-    agg[nm].totalMin += r.durationMinutes;
-    const inRec = payRecords.find(x =>
-      x.employeeName === nm && x.punchType === '出勤' && x.date === r.date && x.shift === r.shift
-    );
-    if (inRec) {
-      const inDt    = new Date(inRec.punchTime);
-      const outDt   = new Date(r.punchTime);
-      const holiday = isHolidayDate(r.date);
-      const nm2     = calcNightMinutes(inDt, outDt);
-      if (holiday) {
-        agg[nm].holidayNightMin += nm2;
-        agg[nm].holidayMin      += Math.max(0, r.durationMinutes - nm2);
-      } else {
-        agg[nm].nightMin  += nm2;
-        agg[nm].normalMin += Math.max(0, r.durationMinutes - nm2);
-      }
-    } else {
-      agg[nm].normalMin += r.durationMinutes;
+  const emps = {};
+  
+  payRecords.forEach(r => {
+    if (r.punchType !== '退勤') return;
+    const name = r.employeeName; if (!name) return;
+    if (!emps[name]) {
+      emps[name] = { name, uniqueDays: new Set(), totalMin: 0, normalMin: 0, nightMin: 0, holidayMin: 0, holidayNightMin: 0, details: [] };
     }
-  }
+    const e = emps[name];
+    const dayStr = r.date || (r.punchTime ? r.punchTime.substring(0, 10) : null);
+    if (dayStr) e.uniqueDays.add(dayStr);
 
-  const transportFee = Math.floor(Number(document.getElementById('transport-fee').value)) || 0;
+    const totalMinutes = Number(r.durationMinutes) || 0;
+    e.totalMin += totalMinutes;
 
-  payrollResults = Object.values(agg).map(e => {
-    const cfg = payEmpMap[e.name] || { wage:0, nightAllowance:0, holidayAllowance:0, holidayNightAllowance:0 };
-    const days            = e.uniqueDays.size;
-    const basePay         = Math.round(cfg.wage                  * e.normalMin        / 60);
-    const nightPay        = Math.round(cfg.nightAllowance        * e.nightMin         / 60);
-    const holidayPay      = Math.round(cfg.holidayAllowance      * e.holidayMin       / 60);
-    const holidayNightPay = Math.round(cfg.holidayNightAllowance * e.holidayNightMin  / 60);
-    const wageTotal       = basePay + nightPay + holidayPay + holidayNightPay;
-    const transport       = transportFee * days;
-    const totalPay        = wageTotal + transport;
-    return { ...e, days, cfg, basePay, nightPay, holidayPay, holidayNightPay, wageTotal, transport, totalPay };
+    // 対応する出勤レコードを検索
+    const checkIn = payRecords.find(p =>
+      p.employeeName === name && p.punchType === '出勤' && p.shift === r.shift &&
+      (p.date || (p.punchTime ? p.punchTime.substring(0,10) : null)) === dayStr
+    );
+
+    let startStr = checkIn ? checkIn.punchTime : null;
+    let endStr = r.punchTime;
+
+    // 深夜時間（22:00〜05:00）の計算
+    let nightMins = 0;
+    if (startStr && endStr) {
+      let start = new Date(startStr.replace(' ', 'T'));
+      let end = new Date(endStr.replace(' ', 'T'));
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && start < end) {
+        let rawNight = 0;
+        let current = new Date(start);
+        current.setSeconds(0, 0); // 秒によるズレを防止
+        let endComp = new Date(end);
+        endComp.setSeconds(0, 0);
+        
+        while (current < endComp) {
+          let h = current.getHours();
+          if (h >= 22 || h < 5) rawNight++;
+          current.setTime(current.getTime() + 60000); // 1分進める
+        }
+        let rawTotal = Math.round((endComp - start) / 60000);
+        if (rawTotal > 0) {
+          // 休憩などで勤務時間(durationMinutes)が実際の時間差分より短い場合、比率で調整
+          nightMins = Math.round(rawNight * (totalMinutes / rawTotal));
+        } else {
+          nightMins = rawNight;
+        }
+      }
+    } else if (endStr) {
+      // 出勤打刻が無い場合、退勤時刻と勤務時間から逆算して開始時刻を導出
+      let end = new Date(endStr.replace(' ', 'T'));
+      if (!isNaN(end.getTime()) && totalMinutes > 0) {
+        let start = new Date(end.getTime() - totalMinutes * 60000);
+        start.setSeconds(0, 0);
+        let endComp = new Date(end);
+        endComp.setSeconds(0, 0);
+        let current = new Date(start);
+        while (current < endComp) {
+          let h = current.getHours();
+          if (h >= 22 || h < 5) nightMins++;
+          current.setTime(current.getTime() + 60000);
+        }
+      }
+    }
+
+    if (nightMins > totalMinutes) nightMins = totalMinutes;
+    if (nightMins < 0) nightMins = 0;
+    let dayMins = totalMinutes - nightMins;
+
+    // 休日と単価の判定
+    const isHol = isHolidayOrWeekend(dayStr);
+    const cfgTmp = payEmpMap[name] || { wage: 0, nightAllowance: 0, holidayAllowance: 0, holidayNightAllowance: 0 };
+
+    let dayRate = isHol ? cfgTmp.holidayAllowance : cfgTmp.wage;
+    let dayCategory = isHol ? '土日祝' : '通常';
+
+    let nightRate = isHol ? cfgTmp.holidayNightAllowance : cfgTmp.nightAllowance;
+    let nightCategory = isHol ? '土日祝深夜' : '深夜';
+
+    // 全体集計への加算
+    if (isHol) {
+      e.holidayMin += dayMins;
+      e.holidayNightMin += nightMins;
+    } else {
+      e.normalMin += dayMins;
+      e.nightMin += nightMins;
+    }
+
+    // 日別内訳への追加
+    let dayRecord = e.details.find(d => d.date === dayStr);
+    if (!dayRecord) {
+      dayRecord = { date: dayStr, isHoliday: isHol, shifts: [], totalMinutes: 0, totalPay: 0 };
+      e.details.push(dayRecord);
+    }
+
+    // 1つのシフトが昼と夜をまたぐ場合、UIの表示上は分割して描画するため2つのデータをpush
+    if (dayMins > 0 || totalMinutes === 0) {
+      dayRecord.shifts.push({
+        shiftDisplay: r.shift,
+        checkIn: startStr,
+        checkOut: endStr,
+        minutes: dayMins,
+        category: dayCategory,
+        rate: dayRate,
+        pay: Math.round(dayRate * dayMins / 60)
+      });
+    }
+    if (nightMins > 0) {
+      dayRecord.shifts.push({
+        shiftDisplay: (dayMins > 0) ? '' : r.shift,  // 昼も存在する場合は下段の表示を省略
+        checkIn: (dayMins > 0) ? '' : startStr,
+        checkOut: (dayMins > 0) ? '' : endStr,
+        minutes: nightMins,
+        category: nightCategory,
+        rate: nightRate,
+        pay: Math.round(nightRate * nightMins / 60)
+      });
+    }
+
+    dayRecord.totalMinutes += totalMinutes;
+    dayRecord.totalPay += Math.round(dayRate * dayMins / 60) + Math.round(nightRate * nightMins / 60);
+  });
+
+  payrollResults = Object.values(emps).map(e => {
+    const cfg = payEmpMap[e.name] || { wage: 0, nightAllowance: 0, holidayAllowance: 0, holidayNightAllowance: 0 };
+    const days = e.uniqueDays.size;
+
+    const basePay         = Math.round(cfg.wage * e.normalMin / 60);
+    const nightPay        = Math.round(cfg.nightAllowance * e.nightMin / 60);
+    const holidayPay      = Math.round(cfg.holidayAllowance * e.holidayMin / 60);
+    const holidayNightPay = Math.round(cfg.holidayNightAllowance * e.holidayNightMin / 60);
+
+    const wageTotal = basePay + nightPay + holidayPay + holidayNightPay;
+    const transport = transportFee * days;
+    const totalPay  = wageTotal + transport;
+
+    const sortedDetails = [...e.details].sort((a, b) => (a.date||'').localeCompare(b.date||''));
+    sortedDetails.forEach(d => {
+      // splitされたシフトが含まれるためcheckInでのソートはしないか、空白を考慮したソートにする
+      d.transport = transportFee;
+      d.dayTotal = d.totalPay + d.transport;
+    });
+
+    return { ...e, days, cfg, basePay, nightPay, holidayPay, holidayNightPay, wageTotal, transport, totalPay, details: sortedDetails };
   }).sort((a, b) => a.name.localeCompare(b.name));
 
   const total = payrollResults.reduce((s, r) => s + r.totalPay, 0);
   document.getElementById('pay-sum-period').textContent = `${from} 〜 ${to}`;
-  document.getElementById('pay-sum-heads').textContent  = `${payrollResults.length}名`;
-  document.getElementById('pay-sum-total').textContent  = `¥${total.toLocaleString()}`;
+  document.getElementById('pay-sum-heads').textContent = `${payrollResults.length}名`;
+  document.getElementById('pay-sum-total').textContent = `¥${total.toLocaleString()}`;
   document.getElementById('payroll-result').style.display = 'block';
 
-  const fromYear = Number(from.substring(0, 4)), toYear = Number(to.substring(0, 4));
-  let holidayNote = '祝日: ';
-  for (let y = fromYear; y <= toYear; y++) {
-    holidayNote += `${y}年${holidayCache[y] ? holidayCache[y].size : 0}日 `;
+  const tbody = document.getElementById('pay-body');
+  if (!payrollResults.length) {
+    tbody.innerHTML = '<tr><td colspan="14" class="empty-msg">計算結果が空です。</td></tr>';
+    document.getElementById('btn-pay-csv').disabled = true;
+    return;
   }
-  document.getElementById('holiday-fetch-note').textContent = holidayNote.trim();
 
-  document.getElementById('payroll-body').innerHTML = payrollResults.map(r => `
-    <tr>
-      <td>${r.name}</td>
-      <td class="mono">¥${(r.cfg.wage||0).toLocaleString()}</td>
-      <td class="mono">${r.days}日</td>
-      <td class="mono">${fmtMin(r.totalMin)}</td>
-      <td class="mono">${fmtMin(r.normalMin)}</td>
+  tbody.innerHTML = payrollResults.map((r, idx) => {
+    const safeId = `pay-detail-${idx}`;
+    return `<tr class="pay-summary-row" style="cursor:pointer;" onclick="togglePayDetail('${safeId}')">
+      <td><span class="pay-expand-arrow" id="${safeId}-arrow" style="display:inline-block;width:14px;transition:transform .15s;">▸</span><strong>${r.name}</strong></td>
+      <td class="mono" style="text-align:center;">${r.days}日</td>
+      <td class="mono" style="font-weight:700;color:var(--text);">${fmtMin(r.totalMin)}</td>
+      <td class="mono" style="color:var(--accent);">${fmtMin(r.normalMin)}</td>
       <td class="mono" style="color:#8b9de8;">${fmtMin(r.nightMin)}</td>
-      <td class="mono" style="color:#f0a040;">${fmtMin(r.holidayMin)}</td>
-      <td class="mono" style="color:#e05c6a;">${fmtMin(r.holidayNightMin)}</td>
-      <td class="mono">¥${r.basePay.toLocaleString()}</td>
-      <td class="mono" style="color:#8b9de8;">¥${r.nightPay.toLocaleString()}</td>
-      <td class="mono" style="color:#f0a040;">¥${r.holidayPay.toLocaleString()}</td>
-      <td class="mono" style="color:#e05c6a;">¥${r.holidayNightPay.toLocaleString()}</td>
-      <td class="mono">¥${r.wageTotal.toLocaleString()}</td>
-      <td class="mono" style="color:var(--accent2);">¥${r.transport.toLocaleString()}</td>
-      <td class="mono" style="color:var(--gold);font-weight:700;">¥${r.totalPay.toLocaleString()}</td>
-    </tr>`).join('');
+      <td class="mono" style="color:var(--gold);">${fmtMin(r.holidayMin)}</td>
+      <td class="mono" style="color:var(--amber);">${fmtMin(r.holidayNightMin)}</td>
+      <td class="mono" style="text-align:right;">¥${r.basePay.toLocaleString()}</td>
+      <td class="mono" style="text-align:right;">¥${r.nightPay.toLocaleString()}</td>
+      <td class="mono" style="text-align:right;">¥${r.holidayPay.toLocaleString()}</td>
+      <td class="mono" style="text-align:right;">¥${r.holidayNightPay.toLocaleString()}</td>
+      <td class="mono" style="text-align:right;font-weight:500;">¥${r.wageTotal.toLocaleString()}</td>
+      <td class="mono" style="text-align:right;color:var(--muted);">¥${r.transport.toLocaleString()}</td>
+      <td class="mono" style="text-align:right;font-weight:700;color:var(--gold);font-size:.85rem;">¥${r.totalPay.toLocaleString()}</td>
+    </tr>
+    <tr class="pay-detail-row" id="${safeId}" style="display:none;">
+      <td colspan="14" style="padding:0;background:var(--surface2);">
+        <div style="padding:14px 18px;">
+          <div style="font-size:.7rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">${r.name} の日別内訳（${r.details.length}日）</div>
+          <table style="width:100%;font-size:.8rem;">
+            <thead>
+              <tr style="color:var(--muted);font-size:.7rem;">
+                <th style="text-align:left;padding:4px 8px;">日付</th>
+                <th style="text-align:center;padding:4px 8px;">勤務種別</th>
+                <th style="text-align:center;padding:4px 8px;">出勤</th>
+                <th style="text-align:center;padding:4px 8px;">退勤</th>
+                <th style="text-align:right;padding:4px 8px;">勤務時間</th>
+                <th style="text-align:center;padding:4px 8px;">区分</th>
+                <th style="text-align:right;padding:4px 8px;">時給</th>
+                <th style="text-align:right;padding:4px 8px;">給与</th>
+                <th style="text-align:right;padding:4px 8px;">交通費</th>
+                <th style="text-align:right;padding:4px 8px;">日額合計</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${r.details.map(d => `
+                <tr style="border-top:1px solid var(--border);">
+                  <td class="mono" style="padding:5px 8px;vertical-align:top;">${d.date || '—'}${d.isHoliday ? ' <span style="color:var(--gold);font-size:.68rem;">(休)</span>' : ''}</td>
+                  
+                  <td style="text-align:center;padding:5px 8px;vertical-align:top;">${d.shifts.map(s => `<div style="margin-bottom:3px;">${s.shiftDisplay ? `<span class="badge ${s.shiftDisplay==='夜勤'?'badge-night':'badge-day'}" style="font-size:.68rem;">${s.shiftDisplay}</span>` : '<span style="color:transparent;">-</span>'}</div>`).join('')}</td>
+                  
+                  <td class="mono" style="text-align:center;padding:5px 8px;vertical-align:top;">${d.shifts.map(s => `<div style="margin-bottom:3px;">${s.checkIn === '' ? '<span style="color:transparent;">-</span>' : fmtTimeOnly(s.checkIn)}</div>`).join('')}</td>
+                  
+                  <td class="mono" style="text-align:center;padding:5px 8px;vertical-align:top;">${d.shifts.map(s => `<div style="margin-bottom:3px;">${s.checkOut === '' ? '<span style="color:transparent;">-</span>' : fmtTimeOnly(s.checkOut)}</div>`).join('')}</td>
+                  
+                  <td class="mono" style="text-align:right;padding:5px 8px;vertical-align:top;">${d.shifts.map(s => `<div style="margin-bottom:3px;">${fmtMin(s.minutes)}</div>`).join('')}<div style="font-weight:700;color:var(--text);border-top:1px dashed var(--border);margin-top:2px;padding-top:2px;">${fmtMin(d.totalMinutes)}</div></td>
+                  
+                  <td style="text-align:center;padding:5px 8px;vertical-align:top;color:var(--muted);font-size:.72rem;">${d.shifts.map(s => `<div style="margin-bottom:3px;">${s.category}</div>`).join('')}</td>
+                  
+                  <td class="mono" style="text-align:right;padding:5px 8px;vertical-align:top;color:var(--muted);">${d.shifts.map(s => `<div style="margin-bottom:3px;">¥${(s.rate||0).toLocaleString()}</div>`).join('')}</td>
+                  
+                  <td class="mono" style="text-align:right;padding:5px 8px;vertical-align:top;">${d.shifts.map(s => `<div style="margin-bottom:3px;">¥${s.pay.toLocaleString()}</div>`).join('')}<div style="font-weight:700;border-top:1px dashed var(--border);margin-top:2px;padding-top:2px;">¥${d.totalPay.toLocaleString()}</div></td>
+                  
+                  <td class="mono" style="text-align:right;padding:5px 8px;vertical-align:top;color:var(--muted);">¥${d.transport.toLocaleString()}</td>
+                  
+                  <td class="mono" style="text-align:right;padding:5px 8px;vertical-align:top;font-weight:600;color:var(--gold);">¥${d.dayTotal.toLocaleString()}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
 
   document.getElementById('btn-pay-csv').disabled = false;
-  showToast('給与計算が完了しました','success');
+  showToast('📊 給与計算が完了しました（深夜時間分割適用済み）', 'success');
 }
 
-function downloadPayCSV(){
-  const from=document.getElementById('pay-from').value, to=document.getElementById('pay-to').value;
-  const fee=document.getElementById('transport-fee').value;
-  const hdrs='従業員名,基本時給(円),出勤日数,総勤務時間(分),通常時間(分),深夜時間(分),土日祝時間(分),土日祝深夜時間(分),基本賃金(円),深夜割増(円),土日祝割増(円),土日祝深夜割増(円),給与小計(円),交通費(円),合計支給額(円)';
-  const rows=payrollResults.map(r=>[
-    r.name, r.cfg.wage, r.days,
-    r.totalMin, r.normalMin, r.nightMin, r.holidayMin, r.holidayNightMin,
+function downloadPayCSV() {
+  if (!payrollResults.length) return;
+  const from = document.getElementById('pay-from').value, to = document.getElementById('pay-to').value;
+  const fee = document.getElementById('transport-fee').value;
+  const hdrs = [
+    '従業員名','出勤日数','総労働時間(分)','通常時間(分)','深夜時間(分)','土日祝時間(分)','土日祝深夜(分)',
+    '基本給(円)','深夜手当(円)','土日祝手当(円)','土日祝深夜手当(円)','給与小計(円)','交通費(円)','支給総額(円)'
+  ].join(',');
+
+  const rows = payrollResults.map(r => [
+    r.name, r.days, r.totalMin, r.normalMin, r.nightMin, r.holidayMin, r.holidayNightMin,
     r.basePay, r.nightPay, r.holidayPay, r.holidayNightPay,
     r.wageTotal, r.transport, r.totalPay
   ].join(','));
-  // 祝日情報をコメントとして付加
-  const fromYear=Number(from.substring(0,4)), toYear=Number(to.substring(0,4));
-  const holidayLines=[];
-  for(let y=fromYear;y<=toYear;y++){
-    const days=holidayCache[y]?[...holidayCache[y]].sort().join(' '):'-';
+
+  const fromYear = Number(from.substring(0,4)), toYear = Number(to.substring(0,4));
+  const holidayLines = [];
+  for (let y = fromYear; y <= toYear; y++) {
+    const days = holidayCache[y] ? [...holidayCache[y]].sort().join(' ') : '-';
     holidayLines.push(`# ${y}年 祝日: ${days}`);
   }
-  const csv='\uFEFF'+[
+
+  const csv = '\uFEFF' + [
     `# 給与計算結果 ${from}〜${to}`,
     `# 交通費単価: ${fee}円/日`,
     ...holidayLines,
     hdrs,
     ...rows
   ].join('\n');
-  const a=Object.assign(document.createElement('a'),{
-    href:URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})),
-    download:`給与計算_${from}_${to}.csv`
+
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })),
+    download: `給与計算_${from}_${to}.csv`
   });
   a.click(); URL.revokeObjectURL(a.href);
-  showToast('CSVをダウンロードしました','success');
+  showToast('CSVをダウンロードしました', 'success');
 }
 
 // ══════════════════════════════════════════════
-//  Init
+// 初期化処理
 // ══════════════════════════════════════════════
-(async()=>{
+(async () => {
   await initDB();
-  const saved=localStorage.getItem('gasUrl')||'';
-  gasUrl=saved;
-  document.getElementById('att-gas-url').value=saved;
-  document.getElementById('att-gas-url').addEventListener('input',e=>{gasUrl=e.target.value.trim();localStorage.setItem('gasUrl',gasUrl);});
-  // IndexedDBキャッシュから従業員マスター復元
-  masterEmployees=await getAllEmpsRaw();
-  if(masterEmployees.length) renderEmpMaster();
-  setThisMonth('fetch-from','fetch-to');
-  setThisMonth('pay-from','pay-to');
+  const savedUrl = localStorage.getItem('gasUrl');
+  if (savedUrl) {
+    document.getElementById('att-gas-url').value = savedUrl;
+    gasUrl = savedUrl;
+  }
+  const n = new Date();
+  setThisMonth('fetch-from', 'fetch-to');
+  setThisMonth('pay-from', 'pay-to');
+
+  try {
+    const records = await getAllRecords();
+    if (records && records.length) {
+      fetchedRecords = records;
+      buildFilterOptions(); applyFilter();
+    }
+    const emps = await getAllEmpsRaw();
+    if (emps && emps.length) {
+      masterEmployees = emps;
+      renderEmpMaster();
+    }
+  } catch (e) {
+    console.error('ローカルデータ読込失敗:', e);
+  }
 })();
 </script>
 </body>
