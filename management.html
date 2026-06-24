@@ -962,8 +962,9 @@ function calcPayroll() {
       let end = new Date(endStr.replace(' ', 'T'));
       if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && start < end) {
         let rawNight = 0;
-        let current = new Date(start);
-        current.setSeconds(0, 0); // 秒によるズレを防止
+        let startComp = new Date(start);
+        startComp.setSeconds(0, 0); // 秒によるズレを防止
+        let current = new Date(startComp);
         let endComp = new Date(end);
         endComp.setSeconds(0, 0);
         
@@ -972,7 +973,8 @@ function calcPayroll() {
           if (h >= 22 || h < 5) rawNight++;
           current.setTime(current.getTime() + 60000); // 1分進める
         }
-        let rawTotal = Math.round((endComp - start) / 60000);
+        // startComp（秒切り捨て済み）を使い、ループ範囲と計算基準を統一
+        let rawTotal = Math.round((endComp - startComp) / 60000);
         if (rawTotal > 0) {
           // 休憩などで勤務時間(durationMinutes)が実際の時間差分より短い場合、比率で調整
           nightMins = Math.round(rawNight * (totalMinutes / rawTotal));
