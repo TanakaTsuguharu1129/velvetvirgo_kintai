@@ -576,8 +576,8 @@ async function fetchAttendance() {
     const res=await fetch(`${url}?action=fetch&from=${from}&to=${to}`);
     document.getElementById('fetch-prog').style.width='70%';
     const json=await res.json(); if(json.status!=='ok') throw new Error(json.message);
-    fetchedRecords=json.records||[]; pendingChanges=[];
-    for(const r of fetchedRecords) if(r.id) await upsertRecord({...r,synced:1});
+    fetchedRecords=(json.records||[]).map(r=>({...r,synced:1})); pendingChanges=[];
+    for(const r of fetchedRecords) if(r.id) await upsertRecord(r);
     document.getElementById('fetch-prog').style.width='100%';
     document.getElementById('fetch-status').textContent=`✅ ${fetchedRecords.length}件取得`;
     buildFilterOptions(); applyFilter();
@@ -647,7 +647,7 @@ async function sendChanges() {
       const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'delete',ids:dels})});
       const j=await r.json(); if(j.status!=='ok')throw new Error(j.message);
     }
-    for(const r of ups) await upsertRecord({...r,synced:1});
+    for(const r of ups){ await upsertRecord({...r,synced:1}); const fr=fetchedRecords.find(x=>x.id===r.id); if(fr) fr.synced=1; }
     for(const id of dels) await delRecById(id);
     showToast(`✅ ${pendingChanges.length}件を送信しました`,'success'); pendingChanges=[]; updateChangeBadge(); applyFilter();
   } catch(e){showToast('❌ 送信失敗: '+e.message,'error');} finally{btn.disabled=false;btn.innerHTML='まとめて送信';}
@@ -746,7 +746,7 @@ async function fetchEmployees() {
 function renderEmpMaster() {
   const grid=document.getElementById('emp-master-grid'); if(!masterEmployees.length){grid.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted);">登録されている従業員はいません</div>';return;}
   grid.innerHTML=masterEmployees.map(e=>{
-    const pUps=empPendingChanges.filter(c=>c.emp.id===e.id); const isEdited=pUps.length&&pUps[0].action==='upsert'; const isNew=e._isNew;
+    const pUps=empPendingChanges.filter(c=>String(c.emp.id)===String(e.id)); const isEdited=pUps.length&&pUps[0].action==='upsert'; const isNew=e._isNew;
     return `<div class="emp-master-row ${isNew?'row-new':(isEdited?'row-edited':'')}" data-id="${e.id}">
       <div class="emp-master-name"><strong>${e.name}</strong> ${isNew?'<span class="badge badge-new">新規</span>':(isEdited?'<span class="badge badge-edited">変更</span>':'')}</div>
       <div><input type="number" class="emp-num-input" data-field="wage" value="${e.wage||0}" oninput="autoCalcAllowances(${e.id},this.value)" /></div>
@@ -779,21 +779,21 @@ function showAutoHint(id, wage){
   if(nh) nh.textContent = `標準25%:¥${Math.floor(wage*1.25)}`; if(hh) hh.textContent = `標準35%:¥${Math.floor(wage*1.35)}`; if(hnh) hnh.textContent = `標準60%:¥${Math.floor(wage*1.60)}`;
 }
 function markEmpChanged(id){
-  const row=document.querySelector(`.emp-master-row[data-id="${id}"]`); if(!row)return; const emp=masterEmployees.find(e=>e.id===id); if(!emp)return;
+  const row=document.querySelector(`.emp-master-row[data-id="${id}"]`); if(!row)return; const emp=masterEmployees.find(e=>String(e.id)===String(id)); if(!emp)return;
   emp.wage = Number(row.querySelector('[data-field="wage"]').value)||0;
   emp.nightAllowance = Number(row.querySelector('[data-field="nightAllowance"]').value)||0;
   emp.holidayAllowance = Number(row.querySelector('[data-field="holidayAllowance"]').value)||0;
   emp.holidayNightAllowance= Number(row.querySelector('[data-field="holidayNightAllowance"]').value)||0;
-  empPendingChanges=empPendingChanges.filter(c=>!(c.action==='upsert'&&c.emp.id===id));
+  empPendingChanges=empPendingChanges.filter(c=>!(c.action==='upsert'&&String(c.emp.id)===String(id)));
   empPendingChanges.push({action:'upsert',emp:{...emp}}); document.getElementById('btn-save-emps').disabled=false; showAutoHint(id, emp.wage);
 }
 function deleteEmpLocally(id){
   if(!confirm('この従業員を削除しますか？\n（GSSへの反映は「変更をGSSに保存」で行われます）'))return;
-  const emp=masterEmployees.find(e=>e.id===id);
+  const emp=masterEmployees.find(e=>String(e.id)===String(id));
   if(emp){
-    empPendingChanges=empPendingChanges.filter(c=>c.emp.id!==id);
+    empPendingChanges=empPendingChanges.filter(c=>String(c.emp.id)!==String(id));
     if(!emp._isNew) empPendingChanges.push({action:'delete',emp});
-    masterEmployees=masterEmployees.filter(e=>e.id!==id); renderEmpMaster(); document.getElementById('btn-save-emps').disabled=false;
+    masterEmployees=masterEmployees.filter(e=>String(e.id)!==String(id)); renderEmpMaster(); document.getElementById('btn-save-emps').disabled=false;
   }
 }
 function addNewEmployee(){

@@ -458,6 +458,21 @@ function roundUp15(date) {
   return d;
 }
 
+/**
+ * 退勤打刻用：15分単位で切り捨て（超過分は切り捨て、繰り下げ）
+ * 例:
+ *   15:35:01 → 15:30  (切り捨て)
+ *   15:44:59 → 15:30  (切り捨て)
+ *   15:45:00 → 15:45  (変化なし、ぴったりの場合はそのまま)
+ *   15:00:00 → 15:00  (変化なし)
+ */
+function roundDown15(date) {
+  const d    = new Date(date);
+  const mins = d.getMinutes();
+  d.setMinutes(mins - (mins % 15), 0, 0); // 秒・ミリ秒も切り捨て
+  return d;
+}
+
 const pad  = n => String(n).padStart(2, '0');
 const hhmm = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 const fmtDT = d =>
@@ -573,7 +588,7 @@ async function punch(type) {
   if (!selectedEmployee || !selectedShift) return;
 
   const now     = new Date();
-  const rounded = roundUp15(now);
+  const rounded = type === '退勤' ? roundDown15(now) : roundUp15(now);
   // BUG-4対応: 日付キーは実際の打刻時刻(now)から取る
   // 23:46等の丸めで翌日になっても、勤怠上は当日扱いにする
   const day     = dateKey(now);
@@ -751,7 +766,7 @@ async function syncData() {
 
     const res  = await fetch(gasUrl, {
       method: 'POST', headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ records: payload }),
+      body: JSON.stringify({ action: 'upsert', records: payload }),
     });
     const json = await res.json();
     if (json.status === 'ok') {
