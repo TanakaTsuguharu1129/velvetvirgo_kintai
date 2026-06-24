@@ -947,56 +947,76 @@ function calcPayroll() {
     e.totalMin += totalMinutes;
 
     // 対応する出勤レコードを検索
-    const checkIn = payRecords.find(p =>
-      p.employeeName === name && p.punchType === '出勤' && p.shift === r.shift &&
-      (p.date || (p.punchTime ? p.punchTime.substring(0,10) : null)) === dayStr
-    );
+    // ・退勤が翌日になるケース（日付跨ぎシフト）に対応するため日付一致ではなく時刻で検索
+    // ・durationMinutes < 0 の異常レコードを除外
+    // ・候補が複数ある場合は退勤時刻に最も近い（直前の）出勤を選択
+    const checkOutTime = r.punchTime ? new Date(r.punchTime.replace(' ', 'T')) : null;
+    const candidateIns = checkOutTime ? payRecords.filter(p => {
+      if (p.employeeName !== name || p.punchType !== '出勤' || p.shift !== r.shift) return false;
+      if (Number(p.durationMinutes) < 0) return false; // 異常値（負）を除外
+      if (!p.punchTime) return false;
+      const pt = new Date(p.punchTime.replace(' ', 'T'));
+      if (isNaN(pt.getTime())) return false;
+      const diff = checkOutTime - pt;
+      return diff > 0 && diff <= 24 * 60 * 60 * 1000; // 退勤より前かつ24時間以内
+    }) : [];
+    // 退勤時刻に最も近い（直前の）出勤レコードを選ぶ
+    const checkIn = candidateIns.length
+      ? candidateIns.reduce((best, p) => {
+          const pt = new Date(p.punchTime.replace(' ', 'T'));
+          const bt = new Date(best.punchTime.replace(' ', 'T'));
+          return pt > bt ? p : best;
+        })
+      : null;
 
     let startStr = checkIn ? checkIn.punchTime : null;
     let endStr = r.punchTime;
 
     // 深夜時間（22:00〜05:00）の計算
+    // 方針：丸め後の出退勤時刻を基準に、深夜境界（22:00 / 翌05:00）で区間を直接分割する。
+    //       比率按分は使わない（durationMinutes と時刻差のズレを持ち込まないため）。
     let nightMins = 0;
-    if (startStr && endStr) {
-      let start = new Date(startStr.replace(' ', 'T'));
-      let end = new Date(endStr.replace(' ', 'T'));
-      if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && start < end) {
-        let rawNight = 0;
-        let startComp = new Date(start);
-        startComp.setSeconds(0, 0); // 秒によるズレを防止
-        let current = new Date(startComp);
-        let endComp = new Date(end);
-        endComp.setSeconds(0, 0);
-        
-        while (current < endComp) {
-          let h = current.getHours();
-          if (h >= 22 || h < 5) rawNight++;
-          current.setTime(current.getTime() + 60000); // 1分進める
-        }
-        // startComp（秒切り捨て済み）を使い、ループ範囲と計算基準を統一
-        let rawTotal = Math.round((endComp - startComp) / 60000);
-        if (rawTotal > 0) {
-          // 休憩などで勤務時間(durationMinutes)が実際の時間差分より短い場合、比率で調整
-          nightMins = Math.round(rawNight * (totalMinutes / rawTotal));
-        } else {
-          nightMins = rawNight;
-        }
+
+    // 秒を切り捨てた Date を返すヘルパー
+    const toRoundedDate = str => {
+      if (!str) return null;
+      const d = new Date(str.replace(' ', 'T'));
+      if (isNaN(d.getTime())) return null;
+      d.setSeconds(0, 0);
+      return d;
+    };
+
+    // 開始時刻の決定（出勤打刻がない場合は退勤時刻から totalMinutes 分逆算）
+    let calcStart = toRoundedDate(startStr);
+    if (!calcStart && endStr) {
+      const endTmp = toRoundedDate(endStr);
+      if (endTmp && totalMinutes > 0) {
+        calcStart = new Date(endTmp.getTime() - totalMinutes * 60000);
       }
-    } else if (endStr) {
-      // 出勤打刻が無い場合、退勤時刻と勤務時間から逆算して開始時刻を導出
-      let end = new Date(endStr.replace(' ', 'T'));
-      if (!isNaN(end.getTime()) && totalMinutes > 0) {
-        let start = new Date(end.getTime() - totalMinutes * 60000);
-        start.setSeconds(0, 0);
-        let endComp = new Date(end);
-        endComp.setSeconds(0, 0);
-        let current = new Date(start);
-        while (current < endComp) {
-          let h = current.getHours();
-          if (h >= 22 || h < 5) nightMins++;
-          current.setTime(current.getTime() + 60000);
+    }
+    const calcEnd = toRoundedDate(endStr);
+
+    if (calcStart && calcEnd && calcStart < calcEnd) {
+      // 深夜帯の境界（22:00〜翌05:00）をその日から翌日以降へと列挙し、重複区間を積算する
+      const NIGHT_START_H = 22;
+      const NIGHT_END_H   = 5;
+      let rawNight = 0;
+      let d = new Date(calcStart);
+      d.setHours(0, 0, 0, 0); // その日の 0:00 から走査開始
+
+      while (d < calcEnd) {
+        const ns = new Date(d); ns.setHours(NIGHT_START_H, 0, 0, 0);              // 当日 22:00
+        const ne = new Date(d); ne.setDate(ne.getDate() + 1); ne.setHours(NIGHT_END_H, 0, 0, 0); // 翌日 05:00
+
+        const overlapStart = Math.max(calcStart.getTime(), ns.getTime());
+        const overlapEnd   = Math.min(calcEnd.getTime(),   ne.getTime());
+        if (overlapEnd > overlapStart) {
+          rawNight += Math.round((overlapEnd - overlapStart) / 60000);
         }
+        d.setDate(d.getDate() + 1);
       }
+
+      nightMins = Math.min(rawNight, totalMinutes);
     }
 
     if (nightMins > totalMinutes) nightMins = totalMinutes;
